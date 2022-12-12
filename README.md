@@ -2,7 +2,7 @@
 
 For this Machine Learning project I wanted to fit models that gave me information that I wish I had easy access to on a daily basis, something that I would use everyday and something others could potentially find useful as well. Almost every day during our Summer Breaks, at 6:30am on the dot, me and my friends routinely went for an early morning sunrise surf sessions to start our days. Whether it was projected to be amazing conditions or even if the surf was as flat as a pool, we made it an effort to at least go for an early morning drive hoping for even the possibility of some fun surf. However, on those days that one of us or all of us were too lazy to wake up to our alarms to drive 10-20 minutes and check the surf, we always had Surfline to give us a surf report and an early morning camera streaming of our break destination of the day.  
 
-![Fig. 1: Surfline Application Poster](../131_Project_images/surfline-2019-fi.jpg)
+![Fig. 1: Surfline Application Poster](131_Project_images/surfline-2019-fi.jpg)
 
 For those who aren't familiar, Surfline is a popular app used among the surf community to check daily and future surf forecast and swell conditions, as well as access to live camera feeds of your local surf break of choice. However, as a subscription based service, Surfline requests a subscription fee in order for a user to access 7-day forecast reports, view camera feeds of certain popular surf breaks, and to remove a 3-time a week limit to check daily conditions. Although a great application that I still use today, sometimes it isn't the most easily accessible way to check the surf forecast 7 days in the future.  
   
