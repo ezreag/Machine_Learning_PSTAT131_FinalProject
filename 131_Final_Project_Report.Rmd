@@ -1,0 +1,803 @@
+---
+title: "Machine SurfLearning"
+subtitle: "Using Machine Learning Models to Predict San Diego Surf Conditions with Historical Buoy Data"
+author: "Ezra Aguimatang"
+date: 'UCSB PSTAT 131 Fall 2022'
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+    df_print: paged
+    theme: spacelab
+---
+
+```{r setup, include=FALSE}
+library(reticulate)
+library(knitr)
+
+knitr::knit_hooks$set(time_it = local({
+  now <- NULL
+  function(before, options) {
+    if (before) {
+      # record the current time before each chunk
+      now <<- Sys.time()
+    } else {
+      # calculate the time difference after a chunk
+      res <- difftime(Sys.time(), now)
+      # return a character string to show the time
+      paste("Time for this code chunk to run:", res)
+    }
+  }
+}))
+# use_python("/Library/Frameworks/Python.framework/Versions/3.10/bin/python3.10")
+# py_install(c("pandas", "seaborn", "matplotlib", "numpy", "scikit-learn", "scipy", "patsy", "statsmodels", "yellowbrick"))
+```
+
+# Introduction
+
+For this Machine Learning project I wanted to fit models that gave me information that I wish I had easy access to on a daily basis, something that I would use everyday and something others could potentially find useful as well. Almost every day during our Summer Breaks, at 6:30am on the dot, me and my friends routinely went for an early morning sunrise surf sessions to start our days. Whether it was projected to be amazing conditions or even if the surf was as flat as a pool, we made it an effort to at least go for an early morning drive hoping for even the possibility of some fun surf. However, on those days that one of us or all of us were too lazy to wake up to our alarms to drive 10-20 minutes and check the surf, we always had Surfline to give us a surf report and an early morning camera streaming of our break destination of the day.  
+  
+![Fig. 1: Surfline Application Poster](131_Project_images/surfline-2019-fi.jpg){width=100%}
+  
+For those who aren't familiar, Surfline is a popular app used among the surf community to check daily and future surf forecast and swell conditions, as well as access to live camera feeds of your local surf break of choice. However, as a subscription based service, Surfline requests a subscription fee in order for a user to access 7-day forecast reports, view camera feeds of certain popular surf breaks, and to remove a 3-time a week limit to check daily conditions. Although a great application that I still use today, sometimes it isn't the most easily accessible way to check the surf forecast 7 days in the future.  
+  
+So for this Machine Learning project, I've decided to take a little inspiration from Surfline, and make my own predictions of the surf for my hometown San Diego. Although the conditions of the surf are rapidly change by the week, day, hour, and even down to the minute, I thought why not take a peek into the process behind the Surf forecasting application I've spent my early mornings checking.  
+
+# Dataset Overview
+
+For this project, I've decided to base my prediction of surf in San Diego on historical daily data from NOAA's National Data Buoy Center, specifically on data from the Tanner Bank Buoy that is used for predicting the conditions for San Diego...  
+
+## Data Source
+The source of the database used in this project will be a set of concatenated **Historical Data**...
+
+  1. **Historical Data Source**:  
+      - [NOAA's National Data Buoy Center](https://www.ndbc.noaa.gov/historical_data.shtml#stdmet)  
+          - Variables Codebook:  
+              - YY - Year  
+              - MM - Month  
+              - DD - Day  
+              - hh - Hour  
+              - mm - Minutes  
+              - WDIR - Wind Direction (degrees clockwise from true N)  
+              - WSPD - Wind Speed (m/s)  
+              - GST - Gust Speed (m/s)  
+              - WVHT - Significant Wave Height (meters)  
+              - DPD - Dominate Wave Period (seconds)  
+              - APD - Average Wave Period (seconds)  
+              - MWD - Direction of DPD (degrees clockwise from true N)  
+              - PRES - Sea Level Pressure (hPa)  
+              - ATMP - Air Temperature (Celsius)  
+              - WTMP - Sea Surface Temperature (Celsius)  
+              - DEWP - Dewpoint Temperature (Celsius)  
+              - VIS - Station Visibility (nautical miles)  
+              - PTDY - Pressure Tendency (plus or minus)  
+              - TIDE - Water Level (feet)  
+          - Station ID's and Locations Used:  
+              - [46047 - Tanner Bank (San Diego)](https://www.ndbc.noaa.gov/data_availability/data_avail.php?station=46047)  
+                  - [1991](https://www.ndbc.noaa.gov/download_data.php?filename=46047h1991.txt.gz&dir=data/historical/stdmet/), [1992](https://www.ndbc.noaa.gov/download_data.php?filename=46047h1992.txt.gz&dir=data/historical/stdmet/), [1993](https://www.ndbc.noaa.gov/download_data.php?filename=46047h1993.txt.gz&dir=data/historical/stdmet/), [1999](https://www.ndbc.noaa.gov/download_data.php?filename=46047h1999.txt.gz&dir=data/historical/stdmet/), [2000](https://www.ndbc.noaa.gov/download_data.php?filename=46047h2000.txt.gz&dir=data/historical/stdmet/), [2001](https://www.ndbc.noaa.gov/download_data.php?filename=46047h2001.txt.gz&dir=data/historical/stdmet/), [2002](https://www.ndbc.noaa.gov/download_data.php?filename=46047h2002.txt.gz&dir=data/historical/stdmet/), [2003](https://www.ndbc.noaa.gov/download_data.php?filename=46047h2003.txt.gz&dir=data/historical/stdmet/), [2004](https://www.ndbc.noaa.gov/download_data.php?filename=46047h2004.txt.gz&dir=data/historical/stdmet/), [2005](https://www.ndbc.noaa.gov/download_data.php?filename=46047h2005.txt.gz&dir=data/historical/stdmet/), [2006](https://www.ndbc.noaa.gov/download_data.php?filename=46047h2006.txt.gz&dir=data/historical/stdmet/), [2007](https://www.ndbc.noaa.gov/download_data.php?filename=46047h2007.txt.gz&dir=data/historical/stdmet/), [2008](https://www.ndbc.noaa.gov/download_data.php?filename=46047h2008.txt.gz&dir=data/historical/stdmet/), [2009](https://www.ndbc.noaa.gov/download_data.php?filename=46047h2009.txt.gz&dir=data/historical/stdmet/), [2010](https://www.ndbc.noaa.gov/download_data.php?filename=46047h2010.txt.gz&dir=data/historical/stdmet/), [2011](https://www.ndbc.noaa.gov/download_data.php?filename=46047h2011.txt.gz&dir=data/historical/stdmet/), [2012](https://www.ndbc.noaa.gov/download_data.php?filename=46047h2012.txt.gz&dir=data/historical/stdmet/), [2013](https://www.ndbc.noaa.gov/download_data.php?filename=46047h2013.txt.gz&dir=data/historical/stdmet/), [2014](https://www.ndbc.noaa.gov/download_data.php?filename=46047h2014.txt.gz&dir=data/historical/stdmet/), [2015](https://www.ndbc.noaa.gov/download_data.php?filename=46047h2015.txt.gz&dir=data/historical/stdmet/), [2016](https://www.ndbc.noaa.gov/download_data.php?filename=46047h2016.txt.gz&dir=data/historical/stdmet/), [2017](https://www.ndbc.noaa.gov/download_data.php?filename=46047h2017.txt.gz&dir=data/historical/stdmet/), [2018](https://www.ndbc.noaa.gov/download_data.php?filename=46047h2018.txt.gz&dir=data/historical/stdmet/), [2019](https://www.ndbc.noaa.gov/download_data.php?filename=46047h2019.txt.gz&dir=data/historical/stdmet/), [2020](https://www.ndbc.noaa.gov/download_data.php?filename=46047h2020.txt.gz&dir=data/historical/stdmet/), [2021](https://www.ndbc.noaa.gov/download_data.php?filename=46047h2021.txt.gz&dir=data/historical/stdmet/)  
+
+## Observations and Variables
+
+From [NOAA's National Data Buoy Center](https://www.ndbc.noaa.gov/historical_data.shtml#stdmet), I have decided to take data from Station ID 46047 which is NOAA's Tanner Banks Buoy. After scanning the station data, I found I have access to the buoy's data for the years; 1991, 1992, 1993, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, and 2021. It is important to note that in the span of roughly 3 decades, the names of variables changed, new variables were added, and some variables were comprised of mostly null values for some years or even nonexistent for other years. Based on that notion, I have decided to deselect certain variables and only read in the variables: "YY", "MM", "DD", "hh", "mm", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP".  
+
+# Research Process
+
+## Response Variable
+
+With a goal in this project of predicting the height of the surf, I have decided the response variable for this model will be `WVHT`, or "significant wave height" when referencing the data from [NOAA's Historical National Data Buoy Center](https://www.ndbc.noaa.gov/historical_data.shtml#stdmet). Now since the goal of this project, which is to predict the next day that a specific surf break will have the "Perfect Surf", is a relative and subjective evaluation of the `WVHT` variable, I will have to decide if I want my prediction of the response to be outputted as a categorical variable (ex. "Bad", "Good", "Perfect") or numerical wave height in meters.  
+
+## Expected Model
+
+For this particular statistical machine learning project, I will be using assuming a regression model due to the presence of a majority continuous quantitative predictor variables significant to the outcome of my chosen continuous numerical response/target variable (`WVHT`).  
+  
+Although the main goal of this model will be prediction, it will be a process of trial and error that requires a combination of prediction and inference. The process of inference will be very important in helping me understand my data by questioning the correlation of each predictor variable to the response `WVHT`. The early exploration of my data, testing of significance and dependence of variables, will be a crucial step in choosing a model with the most accurate prediction.  
+
+## Expected Significant Predictors
+
+Since the adequacy of surf is so specific, I do not think many of the imported variables will have neutral correlations to the response variable `WVHT`, but if I were to choose variables that I would expect to be most significant in predicting the response I would suspect:  
+
+  - Date/Time Variables  
+  - WDIR - Wind Direction (degrees clockwise from true N)  
+  - WSPD - Wind Speed (m/s)  
+  - DPD - Dominate Wave Period (seconds)  
+  - APD - Average Wave Period (seconds)  
+  - TIDE - Water Level (feet)  
+
+## Python Modules
+
+Although this project was begun for UCSB's PSTAT 131 Course: Statistical Machine Learning, a class that is taught entirely in the language `R`, I have decided to try and expand my understanding of Machine Learning by completing this project in `Python`.  
+
+For this project, in order to clean my data, explore my data, visualize my analysis, build and evaluate my models, and make my predictions, I have chosen to utilize the `Python` Modules below.  
+
+```{python class.source="fold-show"}
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sb
+import scipy as sp
+import patsy as pat
+import statsmodels as stmd
+import random
+from yellowbrick.regressor import PredictionError, ResidualsPlot
+
+import sklearn
+from sklearn.model_selection import (
+  train_test_split, 
+  RepeatedStratifiedKFold, 
+  cross_val_score
+  )
+from sklearn.decomposition import PCA
+from sklearn.feature_selection import SelectKBest
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.linear_model import Ridge
+from sklearn.svm import SVR
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.metrics import accuracy_score
+from sklearn.pipeline import (
+  Pipeline, 
+  FeatureUnion
+  )
+```
+
+# Data Cleaning {.tabset}
+
+Before even beginning to explore my data or predictor/target variables, I want to start with cleaning my data by looking at missing and unimportant variables/values across each year of data, concatenating/combining each year of data into one large dataframe, and possibly converting the units of some variables.  
+
+## Reading Data
+
+My first step in cleaning my data starts with reading in our `.txt` files, using `pandas.read_csv()` function, and only passing the variables "YY", "MM", "DD", "hh", "mm", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", and "WTMP" into our dataframes. The code for this process can be seen by pressing the `code` button below.  
+
+```{python}
+buoy_46047_1991_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_1991.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"])
+
+buoy_46047_1992_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_1992.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"])
+
+buoy_46047_1993_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_1993.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"])
+
+buoy_46047_1999_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_1999.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"])
+
+buoy_46047_2000_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_2000.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"])
+
+buoy_46047_2001_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_2001.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"])
+
+buoy_46047_2002_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_2002.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"])
+
+buoy_46047_2003_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_2003.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"])
+
+buoy_46047_2004_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_2004.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"])
+
+buoy_46047_2005_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_2005.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "mm", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"])
+
+buoy_46047_2006_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_2006.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "mm", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"])
+
+buoy_46047_2007_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_2007.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "mm", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"], skiprows=[1])
+
+buoy_46047_2008_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_2008.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "mm", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"], skiprows=[1])
+
+buoy_46047_2009_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_2009.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "mm", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"], skiprows=[1])
+
+buoy_46047_2010_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_2010.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "mm", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"], skiprows=[1])
+
+buoy_46047_2011_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_2011.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "mm", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"], skiprows=[1])
+
+buoy_46047_2012_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_2012.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "mm", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"], skiprows=[1])
+
+buoy_46047_2013_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_2013.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "mm", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"], skiprows=[1])
+
+buoy_46047_2014_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_2014.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "mm", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"], skiprows=[1])
+
+buoy_46047_2015_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_2015.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "mm", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"], skiprows=[1])
+
+buoy_46047_2016_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_2016.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "mm", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"], skiprows=[1])
+
+buoy_46047_2017_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_2017.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "mm", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"], skiprows=[1])
+
+buoy_46047_2018_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_2018.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "mm", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"], skiprows=[1])
+
+buoy_46047_2019_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_2019.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "mm", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"], skiprows=[1])
+
+buoy_46047_2020_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_2020.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "mm", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"], skiprows=[1])
+
+buoy_46047_2021_data = pd.read_csv("131_Project_Buoy_Data/46047_sandiego_2021.txt", sep=" ", usecols=["YY", "MM", "DD", "hh", "mm", "WDIR", "WSPD", "WVHT", "APD", "PRES", "ATMP", "WTMP"], skiprows=[1])
+```
+
+## Universalizing Variables Across Datasets
+
+After scanning the data, it's clear that for years 1991, 1992, 1993, 1999, 2000, 2001, 2002, 2003, and 2004, we do not have the variable `mm` which indicates the minute of the hour (`hh`) for that day's observation. To compensate for this we will use the function from the `pandas` module, `df.insert()`, to add a new `mm` column to the dataframe with a value of $00$: assuming each observation is at the top of the hour. To verify this, we can print `df.dtypes` to make sure the column is successfully added with the correct variable type (`int`).  
+
+```{python class.source="fold-show"}
+# Inserting a column for the `mm` variable
+buoy_46047_1991_data.insert(4, "mm", int(00), allow_duplicates=False)
+buoy_46047_1992_data.insert(4, "mm", int(00), allow_duplicates=False)
+buoy_46047_1993_data.insert(4, "mm", int(00), allow_duplicates=False)
+buoy_46047_1999_data.insert(4, "mm", int(00), allow_duplicates=False)
+buoy_46047_2000_data.insert(4, "mm", int(00), allow_duplicates=False)
+buoy_46047_2001_data.insert(4, "mm", int(00), allow_duplicates=False)
+buoy_46047_2002_data.insert(4, "mm", int(00), allow_duplicates=False)
+buoy_46047_2003_data.insert(4, "mm", int(00), allow_duplicates=False)
+buoy_46047_2004_data.insert(4, "mm", int(00), allow_duplicates=False)
+
+# List of Dataframes for Each Year
+sandiego_df_list = [buoy_46047_1991_data, buoy_46047_1992_data, buoy_46047_1993_data, buoy_46047_1999_data, buoy_46047_2000_data, buoy_46047_2001_data, buoy_46047_2002_data, buoy_46047_2003_data, buoy_46047_2004_data, buoy_46047_2005_data, buoy_46047_2006_data, buoy_46047_2007_data, buoy_46047_2008_data, buoy_46047_2009_data, buoy_46047_2010_data, buoy_46047_2011_data, buoy_46047_2012_data, buoy_46047_2013_data, buoy_46047_2014_data, buoy_46047_2015_data, buoy_46047_2016_data, buoy_46047_2017_data, buoy_46047_2018_data, buoy_46047_2019_data, buoy_46047_2020_data, buoy_46047_2021_data]
+```
+
+## Concatenating Data
+
+Now that we've successfully read in our data with the same variables for each year, I want to now create one large concatenated data set with all year of data included, using `pandas.concat()` function, in order to prepare my data for a train/test split later in my analysis.  
+
+```{python class.source="fold-show"}
+# Concatenating Dataframes
+sandiego_46047_concat = pd.concat(sandiego_df_list, ignore_index=True)
+```
+
+## Date and Time Variables
+
+One important thing to note in this dataset, is that we have `int` (integer) value types for the variables `YY`, `MM`, `DD`, `hh`, and `mm`, which indicate time. In order to make better use of these variables, we will insert a new column `DATE` that transforms these `int` values into a date-time format using `pandas.to_datetime()`.  
+
+```{python class.source="fold-show"}
+sandiego_46047_concat['DATE'] = sandiego_46047_concat['MM'].apply(str) + '/' + sandiego_46047_concat['DD'].apply(str) + '/' + sandiego_46047_concat['YY'].apply(str)
+move_column = sandiego_46047_concat.pop('DATE')
+sandiego_46047_concat.insert(0, 'DATE', move_column)
+
+sandiego_46047_concat['DATE'] = pd.to_datetime(sandiego_46047_concat['DATE'], format="%m/%d/%Y")
+```
+
+## Dropping Variables and Handling Missing/Null Values
+
+Although this data set was not read in with any missing values, while scanning the data, I found that [NOAA's National Data Buoy Center](https://www.ndbc.noaa.gov/historical_data.shtml#stdmet) consistently uses values $99.0$, $999.0$, and $9999.0$ multiple times throughout the decades of data to indicate missing values for a given observation. In order to take this into account, I have already dropped variables that were primarily comprised of these values (`GST`, `DPD`, `MWD`, `DEWP`, `VIS`, `TIDE`).  
+  
+But now, since `python` cannot distinguish these numerical values as "missing" without writing some unnecessary code, we will instead simply replace them with `NaN` values using `pandas.dataframe.replace()` and `numpy.nan` to insert an `NaN` (missing/null) value.  
+
+```{python class.source="fold-show"}
+# Replace Values (99.0, 999.0, 9999.0) with NaN
+sandiego_46047_concat['WDIR'] = sandiego_46047_concat['WDIR'].replace(999, np.nan)
+sandiego_46047_concat['WSPD'] = sandiego_46047_concat['WSPD'].replace(99.00, np.nan)
+sandiego_46047_concat['WVHT'] = sandiego_46047_concat['WVHT'].replace(99.00, np.nan)
+sandiego_46047_concat['APD'] = sandiego_46047_concat['APD'].replace(99.00, np.nan)
+sandiego_46047_concat['PRES'] = sandiego_46047_concat['PRES'].replace(9999.00, np.nan)
+sandiego_46047_concat['ATMP'] = sandiego_46047_concat['ATMP'].replace(99.00, np.nan)
+sandiego_46047_concat['ATMP'] = sandiego_46047_concat['ATMP'].replace(999.00, np.nan)
+sandiego_46047_concat['WTMP'] = sandiego_46047_concat['WTMP'].replace(99.00, np.nan)
+sandiego_46047_concat['WTMP'] = sandiego_46047_concat['WTMP'].replace(999.00, np.nan)
+```
+
+Now since `WVHT` is our response/target variable, we want to remove any observations where `WVHT` has a missing value due to the fact that none of these observations will be very helpful in our final prediction. Therefore, we will use `pandas` function `dataframe.dropna(axis=0)` to drop any row where `WVHT` is missing or null from the dataframe. After dropping these rows, we will reset the row indices with `dataframe.reset_index()`.  
+
+```{python class.source="fold-show"}
+# Drop Observations/Rows where a Variable has an NaN Value
+sandiego_46047_df = sandiego_46047_concat.dropna(axis=0)
+
+# Reset the Index Values after dropping observations
+sandiego_46047_df = sandiego_46047_df.reset_index(drop=True)
+
+# Check if any null values are still present 
+sandiego_46047_df.isnull().sum()
+```
+
+## Unit Conversion
+
+Lastly, before finalizing our dataframe before our Exploratory Data Analysis, I've decided that I want to convert the units of my response/target variable `WVHT` from meters to feet, since most surfers in San Diego look at surf height in terms of feet.  
+
+```{python class.source="fold-show"}
+# Convert 'WVHT' from Meters to Feet
+sandiego_46047_df.loc[:, 'WVHT'] *= 3.28084
+sandiego_46047_df['WVHT'] = sandiego_46047_df['WVHT'].round(2)
+```
+
+## Final Cleaned Dataframe
+
+Now that we've finished concatenating and cleaning our data sets, let's see our final dataframe and variable object types.  
+
+Looking below at the dimensions of our final dataframe, we have ended up with 13 total variables (1 Response Variable: `WVHT`, and 12 Predictor Variables). Over the span of 3 decades of data from a singular buoy, after cleaning our data, we are left with a relatively large dataset comprised of 136,376 non-null rows/observations.  
+
+```{python}
+print(sandiego_46047_df)
+```
+
+Now in terms of datatypes, we can see from the output below, we have nearly all numerical variables data types where:  
+  - `DATE` is of type `datetime64[ns]`  
+  - `YY`, `MM`, `DD`, `hh`, `mm` are integer/whole number values or `int64` data types  
+  - `WDIR`, `WSPD`, `WVHT`, `APD`, `PRES`, `ATMP`, `WTMP` are all float/decimal values or `float64` data types  
+
+```{python}
+print(sandiego_46047_df.dtypes)
+```
+
+# Exploratory Data Analysis
+
+Now that we have our cleaned data, before we start splitting our dataframe for training and testing, let's first take some time to learn more about our data. In order to avoid any later errors in our predictions, we want to verify our understanding of how our response variable `WVHT` is influenced by our chosen predictor variables, and how our predictor variables influence one another.  
+
+## Checking the Distribution of All Variables
+
+Firstly, to understand our response variable `WVHT` a little more, we will start by looking at its distribution using a histogram visualization.  
+
+```{python results='hide'}
+plt.hist(sandiego_46047_df["WVHT"], bins=40, edgecolor="black")
+plt.title("Histogram of 'WVHT' Frequency Count")
+plt.xlabel("Wave Height 'WVHT' in Feet")
+plt.ylabel("Frequency")
+plt.show()
+```
+
+Visually, we can see we have a very strong right-skewness of `WVHT` which we must note as a possible cause of concern, since a non-normally distributed response variable can create some less reliable predictions later down the road.  
+
+To verify the visual interpretation of this distribution, we will use `python`'s `pandas` module to compute the skewness test for normality with the `df.skew()` function for `WVHT` as well as all predictor variables.  
+
+```{python warning=F}
+sandiego_46047_df.skew(axis=0, numeric_only=True)
+```
+
+With this function, values that are not close to zero are not normally distributed. As can be seen, we have very skewed variables. `WVHT` outputs a value of $1.241757$ which indicates a very strong right skewed distribution, and `WDIR` outputs a value of $-2.622121$, indicating a very strong left skew. `APD` also presents a fairly moderate/severe right skew with a value of $0.992836$, while all other predictor variables appear to be approximately symmetric.  
+
+## Response vs. Integer Type Predictor Variables
+
+Now that we have found clear evidence of a non-normally distributed response variable, we take another step towards understanding `WVHT` by utilizing boxplots to view `WVHT` responding to our `int` data type predictors, a.k.a. whole number/integer values.  
+
+Knowing that seasons and the time of year are well known indicators of surf, we will start with a box plot of wave height (`WVHT`) for each month (`MM`) over the course of the 3 decades recorded in the data.  
+```{python results='hide'}
+SD_jan_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['MM'] == 1]
+SD_feb_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['MM'] == 2]
+SD_mar_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['MM'] == 3]
+SD_apr_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['MM'] == 4]
+SD_may_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['MM'] == 5]
+SD_jun_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['MM'] == 6]
+SD_jul_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['MM'] == 7]
+SD_aug_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['MM'] == 8]
+SD_sep_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['MM'] == 9]
+SD_oct_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['MM'] == 10]
+SD_nov_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['MM'] == 11]
+SD_dec_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['MM'] == 12]
+
+plt.boxplot([SD_jan_wvht, SD_feb_wvht, SD_mar_wvht, SD_apr_wvht, SD_may_wvht, SD_jun_wvht, SD_jul_wvht, SD_aug_wvht, SD_sep_wvht, SD_oct_wvht, SD_nov_wvht, SD_dec_wvht])
+
+plt.xticks(list(range(1, 13)), ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])
+plt.title("Boxplot of WVHT for each Month")
+plt.xlabel("Month")
+plt.ylabel("WVHT in Feet")
+plt.show()
+```
+
+As expected, it seems like `WVHT`'s distribution for the mean, the interquartile range, and maximum/minimum values are not consistent for each month of data. With this we can assume that significant wave height `WVHT` is most likely dependent on the month `MM` of the year.  
+
+Following this result, let's create another boxplot to check and see if we have any clear visible trends in our significant wave height over the course of the 3 decades of data by visualizing `WVHT` per `YY`.  
+
+```{python results='hide'}
+SD_1991_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 1991]
+SD_1992_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 1992]
+SD_1993_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 1993]
+SD_1999_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 1999]
+SD_2000_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 2000]
+SD_2001_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 2001]
+SD_2002_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 2002]
+SD_2003_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 2003]
+SD_2004_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 2004]
+SD_2005_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 2005]
+SD_2006_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 2006]
+SD_2007_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 2007]
+SD_2008_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 2008]
+SD_2009_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 2009]
+SD_2010_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 2010]
+SD_2011_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 2011]
+SD_2012_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 2012]
+SD_2013_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 2013]
+SD_2014_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 2014]
+SD_2015_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 2015]
+SD_2016_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 2016]
+SD_2017_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 2017]
+SD_2018_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 2018]
+SD_2019_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 2019]
+SD_2020_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 2020]
+SD_2021_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 2021]
+
+plt.boxplot([SD_1991_wvht, SD_1992_wvht, SD_1993_wvht, SD_1999_wvht, SD_2000_wvht, SD_2001_wvht, SD_2002_wvht, SD_2003_wvht, SD_2004_wvht, SD_2005_wvht, SD_2006_wvht, SD_2007_wvht, SD_2008_wvht, SD_2009_wvht, SD_2010_wvht, SD_2011_wvht, SD_2012_wvht, SD_2013_wvht, SD_2014_wvht, SD_2015_wvht, SD_2016_wvht, SD_2017_wvht, SD_2018_wvht, SD_2019_wvht, SD_2020_wvht, SD_2021_wvht])
+
+plt.xticks(list(range(1, 27)), ["'91", "'92", "'93", "'99", "'00", "'01", "'02", "'03", "'04", "'05", "'06", "'07", "'08", "'09", "'10", "'11", "'12", "'13", "'14", "'15", "'16", "'17", "'18", "'19", "'20", "'21"])
+plt.title("Boxplot of WVHT for each Year")
+plt.xlabel("Years (1991-1993, 1999-2021)")
+plt.ylabel("WVHT in Feet")
+plt.show()
+```
+
+From a visual standpoint, in comparison to our boxplot of `WVHT` each `MM`, there does not seem to be a notable trend in `WVHT` each `YY` from 1991 - 2021. From this boxplot alone, we can make a general assumption that our response variable `WVHT` is most likely dependent of `YY` in near future years.  
+
+## Visualizing Correlation of Variables
+
+Now that we've taken some visual interpretations of `WVHT` responding to predictors, we'll next look at some numerical approaches to evaluating the interaction of our target variable and its predictors.  
+
+Firstly, let us take a look at the correlation between our variables using a correlation matrix and correlation heat map plot.  
+```{python}
+sandiego_46047_df.corr()
+corrplot = sb.heatmap(sandiego_46047_df.corr())
+plt.show()
+```
+
+Noting that, a correlation coefficient in the range:  
+  
+  - $(-1, -0.5)$ indicates a strong negative correlation,  
+  - $(-0.5, 0.5)$ indicates a non-existent or weak negative/positive correlation,  
+  - $(0.5, 1)$ indicates a strong positive correlation,  
+
+we take a look at our color coded correlation heat map above to see the correlation between our variables.  
+
+When focusing on the response variable `WVHT`, we can see that a majority of the correlation plots with predictors take on a purple/pink hue which indicate essentially zero significant correlation. However, the most notable correlations between `WVHT` and predictors can be seen with `ATMP` and `WTMP` which take on a dark purple/black hue (indicating a slight negative correlation), and the correlations of `WVHT` with `WSPD` and `APD` which display an orange/red hue (indicating a slight positive correlation).  
+
+Taking a closer look at these correlations, we'll look at the correlation coefficient values for `WVHT` with each of these 4 predictor variables, as well as their scatter plots to get a better visual representation of their spread, bias, and correlations.  
+
+For `WSPD` we have a correlation coefficient of $\approx 0.4609707914850592$, a trend that can be corroborated by the scatter plot below.  
+```{python}
+sandiego_46047_df['WSPD'].corr(sandiego_46047_df['WVHT'])
+```
+```{python}
+wspd_scatter = sb.scatterplot(x = sandiego_46047_df['WSPD'], y = sandiego_46047_df['WVHT'])
+wspd_scatter
+```
+
+For `APD` we have a correlation coefficient of $\approx 0.3401179783730226$, a trend that can be corroborated by the scatter plot below.  
+```{python}
+sandiego_46047_df['APD'].corr(sandiego_46047_df['WVHT'])
+```
+```{python}
+apd_scatter = sb.scatterplot(x = sandiego_46047_df['APD'], y = sandiego_46047_df['WVHT'])
+apd_scatter
+```
+
+For `ATMP` we have a correlation coefficient of $\approx -0.2948253489768376$, a trend that can be corroborated by the scatter plot below.  
+```{python}
+sandiego_46047_df['ATMP'].corr(sandiego_46047_df['WVHT'])
+```
+```{python}
+atmp_scatter = sb.scatterplot(x = sandiego_46047_df['ATMP'], y = sandiego_46047_df['WVHT'])
+atmp_scatter
+```
+
+For `WTMP` we have a correlation coefficient of $\approx -0.2946934397448771$, a trend that can be corroborated by the scatter plot below. 
+```{python}
+sandiego_46047_df['WTMP'].corr(sandiego_46047_df['WVHT'])
+```
+```{python}
+wtmp_scatter = sb.scatterplot(x = sandiego_46047_df['WTMP'], y = sandiego_46047_df['WVHT'])
+wtmp_scatter
+```
+
+# Model Building Preparation
+
+For the purposes of translating my work in terms of this course, it should be noted that there are many differences in the procedure of preparing our data for model building and selection when using `Python` versus when using `R`. In `Python`, many of the processes handled by `R`, with functions such as `recipe()` and piped `step_()` operators, are not so easily replicable and neatly written with just a few lines of code. Hence, this step of our project is slightly longer than would be in `R`. In this project, data pre-processing and model building will be done using the methods within the `scikitlearn`/`sklearn` module.  
+
+Although having many similarities to `R`, I will be following the general `Python` workflow of model building preparation below:  
+
+  1. Data Splitting  
+      - Splitting the Dataframe into Training/Testing Sets  
+      - (where the process of stratified splitting differs from `R`)  
+  2. Feature Engineering    
+      - Defining Data Preprocessing and Data Transformation Techniques for Each Model
+      - (similar to `recipe()` in `R` except much more tedious step by step process due to a lack of a `Python` equivalent)  
+  3. Modeling Pipeline  
+      - Stratified K-Folds of our Training Data for Parameter Tuning  
+      - (rather than folding first and specifying model fitting expectations with a workflow and a recipe like in `R`, in `Python` we can more simply do all the above steps simultaneously with `sklearn.pipeline` with just a few lines of code)  
+
+## Data Splitting
+
+First off, let's clarify the reason for splitting our data prior to Pre-processing and Data Transformations. When setting up **Supervised** Machine Learning workflows to build and test data on multiple models, it is important we separate data to avoid **over-fitting**: building a prediction model that falsely assumes future unknown values will look exactly like the data we already know. The root of this problem of over-fitting, comes from workflow setup mistakes that don't take measures to prevent **data leakage**. Hence, the first step in Model Building Workflow Preparation to avoid data leakage, is properly splitting our data into a training subset (to train/build/learn our prediction model) and testing subset (to treat as unknown data to test our prediction accuracy).  
+
+Now let's outline the steps we will take to properly split our data in this project. But first, as stated previously, it must be noted that the process of properly splitting our data by stratifying our response variable is slightly different than done in `R`:  
+
+  1. Firstly, similar to `R`, we need to set our random seed value to allow us to have a fixed randomized sample value to call back and reproduce the same random sample of our data across runs of our model(s), which will ultimately increase the stability and reliability of our model accuracy results.  
+  2. Now to split our data, we have an equivalent to `R`'s `initial_split(df, prop=proportion, strata="response_variable")` using `sklearn.train_test_split(X, y, test_size=proportion, stratify=y)`. However, rather than being able to easily stratify our split by the continuous response/target variable `WVHT`, a functionality that `sklearn` does not currently have, we have to trick the function into seeing a categorical variable by binning our continuous response variable (commonly called discretization).  
+
+```{python class.source="fold-show"}
+from sklearn.model_selection import train_test_split
+
+# X = sandiego_46047_df[["YY", "MM", "DD", "hh", "mm", "WDIR", "WSPD", "APD", "PRES", "ATMP", "WTMP"]]
+X = sandiego_46047_df.drop(['WVHT', 'DATE'], axis=1, inplace=False)
+y = sandiego_46047_df["WVHT"]
+
+# stratified_bins = np.linspace(0, 136376, 4)
+# wvht_binned = np.digitize(y, stratified_bins)
+
+seed_val = 42
+random.seed(seed_val)
+np.random.seed(seed_val)
+
+X_sdsurf_train, X_sdsurf_test, y_sdsurf_train, y_sdsurf_test = train_test_split(X, y, test_size=0.2, random_state=42)
+```
+
+Now let's make sure that we have a stratified split of our target/response variable `WVHT`, the same proportion of wave heights in both sets, which we can verify by checking the distribution of both the training and testing splits with a histogram. If they have the same shape/distribution, we have successfully created a stratified split.  
+
+```{python results='hide'}
+plt.hist(y_sdsurf_train, bins=40, color="lightblue", edgecolor="black")
+plt.title("Histogram of Y Training Frequency Count")
+plt.xlabel("Wave Height 'WVHT' in Feet")
+plt.ylabel("Frequency")
+plt.show()
+
+plt.hist(y_sdsurf_test, bins=40, color="lightpink", edgecolor="black")
+plt.title("Histogram of Y Testing Frequency Count")
+plt.xlabel("Wave Height 'WVHT' in Feet")
+plt.ylabel("Frequency")
+plt.show()
+```
+
+After successfully splitting our data into a training and testing set, as seen above, we will check to make sure our sets of training and testing data have an accurate percentage of observations in each.  
+
+```{python}
+print("Dimensions of our Predictors Training Split Dataframe: ", X_sdsurf_train.shape, "\nDimensions of our Predictors Testing Split Dataframe: ", X_sdsurf_test.shape, "\nDimensions of our Response Training Split Dataframe: ", y_sdsurf_train.shape, "\nDimensions of our Response Testing Split Dataframe: ", y_sdsurf_test.shape)
+```
+
+As we can see above, we have successfully created a split of our 136,376 observations of data using 80$\%$ for our training data (109,100 observations) and 20$\%$ for our testing data (27,276 observations). By using 80$\%$ of our data for training, we allow ourselves to still use a large amount of our data to create an accurate and reliable model, without the concern of over-fitting that can happen using 100$\%$ of our data for training a model.  
+
+## Feature Engineering  
+
+After data splitting, the next this step of our model building preparation involves **Feature Engineering** (or feature extraction). A very important step that is susceptible to data leakage, feature engineering refers to manipulating the features of our data using **Data Pre-Processing** and **Data Transformation** techniques. Thinking of our data prior to feature engineering as a rough draft of an essay, we want to revise or change our data so that we may have a final draft of our data set that is complete and has variables with correct values and distributions. Although the steps that are applied vary depending on a Machine Learning Project's Data, the general order of techniques that should be considered for any problem are as follows:  
+
+  - Data Pre-Processing and Data transformations:  
+      1. ***Choosing Important Predictors***: deciding which predictors to continue with before model building  
+      2. ***Missing Value Handling***: deciding whether or not to keep or drop our previously explored missing values, or to use **imputation** to fill in kept missing values  
+      3. ***Transformations***  
+          - *Polynomial Features*: creating **interactions** for features/predictors that have non-linear or dependent relationships with the target/response variable or other predictors  
+          - *Continuous Features*: deciding if continuous variables need to categorized into numerical splits using **discretization** or **binarization**  
+      4. ***Scaling***  
+          - *Standardization*:  
+          - *Normalization*:  
+
+As I've briefly mentioned in a previous section (Model Building Preparation), we can define these processes neatly using a **Modeling Pipeline**, which will be explained in the next section.  
+
+## What is a Modeling Pipeline? 
+
+Dissimilar to `R`, `Python` does not have a `workflow()` function, but it does have a similar method of **Pipelines**. A pipeline can be explained as a sort of guidelines that are written as a sequence of rules for data preprocessing, modeling building, transformations, and prediction metrics. Multiple pipelines can be made with different "rules" depending on the nature of the training data, model being fit, and more.  
+
+The pipeline created from this process is what `sklearn` calls a **Modeling Pipeline**. In `R`, after splitting and pre-processing our data, one normally follows a step by step procedure that folds their training data, sets up a model and workflow, creates a parameter grid, tunes a model, and selects parameters based on performance metrics. However in `Python`, the `sklearn` module allows us to do this all simultaneously and a little quicker and cleaner with the `sklearn.pipeline` class's functionality. Within each pipeline, created using `sklearn.pipeline.Pipeline()` or `sklearn.pipeline.make_pipeline()`, we not only can we apply the aforementioned procedures, but we can also evaluate our pipeline using a chosen **Resampling** and/or **Cross-Validation** procedure to again address the persisting issue of data leakage and reproducibility.  
+
+The advantage of using this pipeline workflow is that as a user of Machine Learning, we can evaluate the pipelines directly. This means are able to focus solely on the outcome and accuracy of a pipeline as opposed to; what specific "rules" `Pipeline()` chooses to use for data pre-processing and transformation, and/or which configuration of hyperparameters from a grid search it chooses.  
+
+# Building Modeling Pipelines
+
+Now with our understanding of Modeling Pipeline workflows, lets build our pipelines! We'll be using the following modules and classes from the `sklearn` 
+
+```{python class.source="fold-show"}
+from numpy import (
+  mean, 
+  absolute, 
+  sqrt, 
+  logspace
+)
+
+from sklearn.model_selection import (
+  train_test_split, 
+  KFold, 
+  RepeatedKFold, 
+  RepeatedStratifiedKFold, 
+  cross_val_score, 
+  GridSearchCV
+  )
+from sklearn.decomposition import PCA
+from sklearn.feature_selection import SelectKBest
+from sklearn.preprocessing import (
+  MinMaxScaler, 
+  KBinsDiscretizer, 
+  StandardScaler
+  )
+from sklearn.linear_model import (
+  LinearRegression, 
+  Ridge, 
+  RidgeCV, 
+  Lasso, 
+  ElasticNet
+  )
+from sklearn.svm import (
+  LinearSVR, 
+  NuSVR
+  )
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.ensemble import (
+  HistGradientBoostingRegressor, 
+  RandomForestRegressor
+  )
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.metrics import (
+  r2_score, 
+  mean_squared_error
+)
+from sklearn.pipeline import (
+  Pipeline, 
+  FeatureUnion
+  )
+```
+
+## Cross Validation  
+
+For this project, of our models will mostly be using a Repeated Stratified K-Fold Cross-Validation with 5 folds of the training data and 5 repeats. According to `sklearn`, Repeated Stratified K-Fold Cross-Validation is not recommended for large data sets where observations exceed 10,000 observations, which is the case for this project's data set, due to the fact that this amount of data are more than sufficiently cross validated with the simpler automated methods such as Leave-One-Out or regular K-Fold. On another note, unlike classification problems that require the use of the `RepeatedStratifiedKFold()` method for repeated stratified k-folds, regression problems (where the target/response variable is a continuous data type) are automatically create repeated stratified k-folds with the `RepeatedKFold()` method. Depending on if the model is linear, strictly for regression, is fitting a large data set (observations > 10,000), has an automated preferred CV strategy; `sklearn` will usually default to supporting a simple `KFold()` cross-validation.  
+
+## Performance Metrics  
+
+Before discussing the metrics we will be using in this project, we'll first discuss the importance of these metrics and the difference in metrics between Regression and Classification problems. **Performance Metrics** are very important values that we use to numerically represent how effectively our assumed models fit our training data and how our tuned models predict the held out test data points of our response/target.  
+
+Between Classification problems and Regression problems, we use very different metrics to evaluate our models' effectiveness and accuracy:  
+
+  1. Classification Metrics:  
+      - **Confusion Matrices**  
+          - a table of the combinations of predicted and actual values (from the test data set) where the response/target variable is binary or multiclass  
+      - **Log-Loss**  
+          - a log representation of the probability estimate  
+      - **Accuracy**  
+          - a percentage indicating how often a classification model correctly makes  predictions  
+      - **AUC-ROC**  
+          - the Area Under the Curve (AUC) Receiver Operator Characteristic (ROC) is essentially the area under the probability curve plotting True Positive Rate (TPR) against the False Positive Rate (FPR)  
+  2. Regression Metrics:  
+      - **Mean Absolute Error** (MAE)  
+          - the mean of the absolute difference of the actual and predicted values, which can be useful since its in the same units as our predictor/target variable  
+      - **Mean Square Error** (MSE)  
+          - a metric similar to MAE but represents a magnitude of error rather than an absolute difference  
+      - **Root Mean Square Error** (RMSE)  
+          - reverses the MSE back to the units of Mean Error  
+      - **R^2**  
+          - known as the coefficient of determination, a metric value ranging from 0 to 1 that measures the goodness of fit between actual and predicted values  
+
+For this project, since `WVHT` is a continuous variable, we will be using MAE, MSE, RMSE, and R^2 to evaluate the performance of most of our models.  
+
+# Our Modeling Pipelines
+
+For this project we will be fitting, tuning, and evaluating various types of **Built-In `Python` Regression Estimators** to build and select my Final Model that best predicts my target variable in this project:  
+
+  1. Linear Models:  
+      - Ridge Regression  
+  2. Support Vector Machines:  
+      - Support Vector Regression  
+  3. K-Nearest Neighbors Methods:  
+      - K-Nearest Neighbors Regression  
+  4. Boosted Tree Models:  
+      - Histogram-Based Boosting Tree Regressor  
+
+## Linear Models
+
+Out of the many different variations of linear models, we will be using a Ridge Regression to attempt and fit our model. A **Ridge Regression Model** is a variation of the Linear Regression model which works to minimize the residual sum of squares, which can be a down fall in some problems due to its coefficient estimate parameters that rely on the independence of the features. Ridge Regression however, addresses Linear Regression's issue of using Ordinary Least Squares (OLS), by using a penalty parameter that works to minimize the size of coefficients (penalized residual sum of squares).
+
+In the `sklearn` module, there are various estimator objects for Ridge Regression. For this problem we will be using the `RidgeCV()` model, which conveniently builds a Ridge Regression with a built in cross-validation feature of the alpha parameter that works identically to a cross-validated grid search to tune the hyperparameters for our final model. Although this model in `sklearn` prefers Leave-One-Out Cross-Validation, I have overrode the CV process to be a Repeated Stratified K-Fold with 5 folds and 5 repeats.  
+
+```{python class.source="fold-show", time_it=TRUE, cache=TRUE}
+rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
+
+ridge_alphas = np.logspace(0, 5, 100)
+ridgecv_model = RidgeCV(alphas=ridge_alphas, cv=rkf, scoring='neg_mean_absolute_error')
+ridgecv_model = ridgecv_model.fit(X_sdsurf_train, y_sdsurf_train)
+
+ridgecv_model_R2 = ridgecv_model.score(X_sdsurf_test, y_sdsurf_test)
+ridgecv_model_bestMSE = absolute(ridgecv_model.best_score_)
+
+y_prediction = ridgecv_model.predict(X_sdsurf_test)
+
+ridgecv_model_predR2 = r2_score(y_sdsurf_test, y_prediction) # same as ridgecv_model_score
+ridgecv_model_predMSE = mean_squared_error(y_sdsurf_test, y_prediction)
+
+print("Best Estimated MSE Score: ", ridgecv_model_bestMSE, "\nBest Estimated RMSE Score: ", sqrt(ridgecv_model_bestMSE), "\n\nR^2 Prediction Error Score: ", ridgecv_model_predR2, "\nMSE Prediction Error Score: ", ridgecv_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(ridgecv_model_predMSE))
+```
+
+As we can see above we used the following process to evaluate our model:  
+  
+  1. First we defined our cross validation process of a Repeated Stratified K-Fold with 5 folds and 5 repeats,  
+  2. We defined our base assumption model with `RidgeCV()`'s built in functionality to also define a range 100 of alpha values between 0 and 5 to grid search,  
+  3. Using this `RidgeCV()` object, we train the model on the training data using the `RidgeCV.fit()` method,  
+  4. We then access the model's `RidgeCV.fit.alpha_` attribute to see our model's chosen estimated regularization parameter of alpha (which we discover is $\alpha = 1.0$), as well as `RidgeCV.fit.best_score_` attribute to access the MSE score with the best value of alpha (which we see is approximately $MSE = 1.206$),  
+  5. Next we begin the process of evaluating our model using `predict()` to use our test set of X to make predictions of Y,  
+  6. Finally to make an evaluation of our final Ridge Regression model, we compare our predicted values of Y to the true values of Y in our `y_sdsurf_test` data set
+
+```{python time_it=TRUE, cache=TRUE, eval=F, include=F}
+estimators = []
+estimators.append(('standardize', StandardScaler()))
+estimators.append(('ridge', Ridge()))
+ridge_model = Pipeline(estimators)
+```
+
+## Support Vector Machines
+
+Within the class of supervised learning methods we call **Support Vector Machines** (SVMs), we will be Support Vector Regression to attempt and fit our model. A **Support Vector Regression** model is a method of SVM that only depends on the training set due to its inherent functionality that ignores samples who have predictions close to the target.
+
+In the `sklearn` module, there are various estimator objects for Support Vector Regression. For this problem we will be using the ` `.  
+
+```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=F}
+rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
+
+# sc_X_train = StandardScaler()
+# sc_y_train = StandardScaler()
+# X_train_tranformed = sc_X_train.fit_transform(X_sdsurf_train)
+# y_train_tranformed = sc_y_train.fit_transform(y_sdsurf_train)
+
+svr_model = NuSVR()
+svr_model = svr_model.fit(X_sdsurf_train, y_sdsurf_train)
+svr_model_fitparams = svr_model.get_params
+
+svr_model_R2 = svr_model.score(X_sdsurf_test, y_sdsurf_test)
+
+y_prediction = svr_model.predict(X_sdsurf_test)
+
+svr_model_predR2 = r2_score(y_sdsurf_test, y_prediction) # same as ridgecv_model_score
+svr_model_predMSE = mean_squared_error(y_sdsurf_test, y_prediction)
+
+print("Estimated Parameters: ", svr_model_fitparams, "\nBest Estimated R^2 Score: ", svr_model_R2, "\n\nR^2 Prediction Error Score: ", svr_model_predR2, "\nMSE Prediction Error Score: ", svr_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(svr_model_predMSE))
+```
+
+```{python time_it=TRUE, cache=TRUE, eval=F, include=F}
+estimators = []
+estimators.append(('standardize', StandardScaler()))
+estimators.append(('linear svr', LinearSVR()))
+svr_model = Pipeline(estimators)
+```
+
+## K-Nearest Neighbors Regression
+
+```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=F}
+rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
+
+KNN_model = KNeighborsRegressor(algorithm='kd_tree', leaf_size=55000)
+
+KNN_model = KNN_model.fit(X_sdsurf_train, y_sdsurf_train)
+KNN_model_fitparams = KNN_model.get_params
+KNN_model_graph = KNN_model.kneighbors_graph(X_sdsurf_train)
+
+KNN_y_prediction = KNN_model.predict(X_sdsurf_test)
+
+KNN_model_predR2 = KNN_y_prediction.score(X_sdsurf_test, y_sdsurf_test)
+KNN_model_predMSE = mean_squared_error(y_sdsurf_test, y_prediction)
+
+print("Estimated Parameters: ", KNN_model_fitparams, "\n\nR^2 Prediction Error Score: ", KNN_model_predR2, "\nMSE Prediction Error Score: ", KNN_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(KNN_model_predMSE))
+```
+
+```{python time_it=TRUE, cache=TRUE, eval=F, include=F}
+estimators = []
+estimators.append(('standardize', StandardScaler()))
+estimators.append(('KNN Regressor', KNeighborsRegressor()))
+KNN_model = Pipeline(estimators)
+```
+
+## Boosted Tree Models
+
+In the class of **Boosted Tree Models**, `sklearn` provides us with a plethora of options to consider. For this project we will be using a **Histogram-Based Gradient Boosting Tree Regressor** to attempt and fit our model. Similar to the common **Gradient Boosting Tree Regressor**, which builds an additive model in a forward stage-wise fashion optimizating arbitrary differentiable loss functions, this model estimator we will use is encourages by `sklearn` "when the number of samples is larger than tens of thousands of samples" due to its functionality that is "**orders of magnitude faster**". By using bin sizes to reduce the number of points to split on, we are able to train a model on our very large data set of continuous values.   
+
+```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=F}
+rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
+
+HGBoost_model = HistGradientBoostingRegressor(loss='squared_error', random_state=seed_val)
+# number of iterations of the boosting process
+HGBoost_num_iter = HGBoost_model.n_iter_
+# number of tree that are built at each iteration
+HGBoost_tree_per_iter = HGBoost_model.n_trees_per_iteration_
+# scores at each iteration on the training data
+HGBoost_train_score = HGBoost_model.train_score_
+# scores at each iteration on the held-out validation data
+HGBoost_val_score = HGBoost_model.validation_score_
+
+HGBoost_model = HGBoost_model.fit(X_sdsurf_train, y_sdsurf_train)
+HGBoost_model_fitparams = HGBoost_model.get_params
+
+HGBoost_y_prediction = HGBoost_model.predict(X_sdsurf_test)
+
+HGBoost_model_predR2 = HGBoost_y_prediction.score(X_sdsurf_test, y_sdsurf_test)
+HGBoost_model_predMSE = mean_squared_error(y_sdsurf_test, y_prediction)
+
+print("Number of Iterations of the Boosting Process: ", HGBoost_num_iter, "\nNumber of Trees Built at each Iteration: ", HGBoost_tree_per_iter, "\nScores at each Iteration on the Training Data: ", HGBoost_train_score, "\nScores at each Iteration on the Validation Data: ", HGBoost_val_score, "\n\nR^2 Prediction Error Score: ", HGBoost_model_predR2, "\nMSE Prediction Error Score: ", HGBoost_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(HGBoost_model_predMSE))
+```
+
+```{python time_it=TRUE, cache=TRUE, eval=F, include=F}
+estimators = []
+estimators.append(('standardize', StandardScaler()))
+estimators.append(('HG Boosted Tree', HistGradientBoostingRegressor()))
+HGBoost_model = Pipeline(estimators)
+```
+
+# Who's our Best-Fitting Model?
+
+```{python eval=F}
+print("Best Estimated MSE Score: ", ridgecv_model_bestMSE, "\nBest Estimated RMSE Score: ", sqrt(ridgecv_model_bestMSE), "\n\nR^2 Prediction Error Score: ", ridgecv_model_predR2, "\nMSE Prediction Error Score: ", ridgecv_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(ridgecv_model_predMSE))
+
+print("Estimated Parameters: ", svr_model_fitparams, "\nBest Estimated R^2 Score: ", svr_model_R2, "\n\nR^2 Prediction Error Score: ", svr_model_predR2, "\nMSE Prediction Error Score: ", svr_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(svr_model_predMSE))
+
+print("Estimated Parameters: ", KNN_model_fitparams, "\n\nR^2 Prediction Error Score: ", KNN_model_predR2, "\nMSE Prediction Error Score: ", KNN_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(KNN_model_predMSE))
+
+print("Number of Iterations of the Boosting Process: ", HGBoost_num_iter, "\nNumber of Trees Built at each Iteration: ", HGBoost_tree_per_iter, "\nScores at each Iteration on the Training Data: ", HGBoost_train_score, "\nScores at each Iteration on the Validation Data: ", HGBoost_val_score, "\n\nR^2 Prediction Error Score: ", HGBoost_model_predR2, "\nMSE Prediction Error Score: ", HGBoost_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(HGBoost_model_predMSE))
+```
+
+## Outcomes of Fitted Models
