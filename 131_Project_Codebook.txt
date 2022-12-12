@@ -1,0 +1,21 @@
+Variable Name , Variable Type , Data Type , Unit of Measurement , Description
+---
+YY , Predictor , Integer , Year YYYY , Year
+MM , Predictor , Integer , Month MM , Month
+DD , Predictor , Integer , Day DD , Day
+hh , Predictor , Integer , Hour HH , Hour
+mm , Predictor , Integer , Minute MM , Minutes
+WDIR , Predictor , Continuous , Degrees Clockwise from True North , Wind Direction 
+WSPD , Predictor , Continuous , Meters per Second , Wind Speed
+GST , Predictor , Continuous , Meters per Second , Gust Speed
+WVHT , Response , Continuous , Meters , Significant Wave Height
+DPD , Predictor , Continuous , Seconds , Dominate Wave Period
+APD , Predictor , Continuous , Seconds , Average Wave Period
+MWD , Predictor , Continuous , Degrees Clockwise from True North , Direction of DPD
+PRES , Predictor , Continuous , hPa , Sea Level Pressure
+ATMP , Predictor , Continuous , Celsius , Air Temperature
+WTMP , Predictor , Continuous , Celsius , Sea Surface Temperature
+DEWP , Predictor , Continuous , Celsius , Dewpoint Temperature
+VIS , Predictor , Continuous , Nautical Miles , Station Visibility
+PTDY , Predictor , Continuous , Plus or Minus , Pressure Tendency
+TIDE , Predictor , Continuous , Feet , Water Level
