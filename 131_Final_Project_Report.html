@@ -3943,19 +3943,9 @@ predicts my target variable in this project:</p>
 <li>K-Nearest Neighbors Regression<br />
 </li>
 </ul></li>
-<li>Random Forest Models:
-<ul>
-<li>Random Forest Regressor<br />
-</li>
-</ul></li>
 <li>Boosted Tree Models:
 <ul>
-<li>Histogram-Based Boosting Tree Regressor<br />
-</li>
-</ul></li>
-<li>Discriminant Analyses Methods:
-<ul>
-<li>Linear Discriminant Analysis</li>
+<li>Histogram-Based Boosting Tree Regressor</li>
 </ul></li>
 </ol>
 <div id="linear-models" class="section level2">
@@ -3985,7 +3975,6 @@ ridgecv_model = RidgeCV(alphas=ridge_alphas, cv=rkf, scoring=&#39;neg_mean_absol
 ridgecv_model = ridgecv_model.fit(X_sdsurf_train, y_sdsurf_train)
 
 ridgecv_model_R2 = ridgecv_model.score(X_sdsurf_test, y_sdsurf_test)
-ridgecv_model_alpha = ridgecv_model.alpha_
 ridgecv_model_bestMSE = absolute(ridgecv_model.best_score_)
 
 y_prediction = ridgecv_model.predict(X_sdsurf_test)
@@ -3993,15 +3982,14 @@ y_prediction = ridgecv_model.predict(X_sdsurf_test)
 ridgecv_model_predR2 = r2_score(y_sdsurf_test, y_prediction) # same as ridgecv_model_score
 ridgecv_model_predMSE = mean_squared_error(y_sdsurf_test, y_prediction)
 
-print(&quot;Estimated L2 Regularizer: alpha = &quot;, ridgecv_model_alpha, &quot;\nBest Estimated MSE Score: &quot;, ridgecv_model_bestMSE, &quot;\nBest Estimated RMSE Score: &quot;, sqrt(ridgecv_model_bestMSE), &quot;\n\nR^2 Prediction Error Score: &quot;, ridgecv_model_predR2, &quot;\nMSE Prediction Error Score: &quot;, ridgecv_model_predMSE, &quot;\nRMSE Prediction Error Score: &quot;, sqrt(ridgecv_model_predMSE))</code></pre>
-<pre><code>## Estimated L2 Regularizer: alpha =  1.0 
-## Best Estimated MSE Score:  1.2065245693118951 
+print(&quot;Best Estimated MSE Score: &quot;, ridgecv_model_bestMSE, &quot;\nBest Estimated RMSE Score: &quot;, sqrt(ridgecv_model_bestMSE), &quot;\n\nR^2 Prediction Error Score: &quot;, ridgecv_model_predR2, &quot;\nMSE Prediction Error Score: &quot;, ridgecv_model_predMSE, &quot;\nRMSE Prediction Error Score: &quot;, sqrt(ridgecv_model_predMSE))</code></pre>
+<pre><code>## Best Estimated MSE Score:  1.2065245693118951 
 ## Best Estimated RMSE Score:  1.0984191227905198 
 ## 
 ## R^2 Prediction Error Score:  0.6491233448758329 
 ## MSE Prediction Error Score:  2.6320537070147103 
 ## RMSE Prediction Error Score:  1.6223605354589683</code></pre>
-<p>Time for this code chunk to run: 1.91269065141678</p>
+<p>Time for this code chunk to run: 2.25367796421051</p>
 <p>As we can see above we used the following process to evaluate our
 model:</p>
 <ol style="list-style-type: decimal">
@@ -4035,23 +4023,13 @@ we compare our predicted values of Y to the true values of Y in our
 <h2>Support Vector Machines</h2>
 <p>Within the class of supervised learning methods we call
 <strong>Support Vector Machines</strong> (SVMs), we will be Support
-Vector Regression to attempt and fit our model. A <strong>Ridge
-Regression Model</strong> is a variation of the Linear Regression model
-which works to minimize the residual sum of squares, which can be a down
-fall in some problems due to its coefficient estimate parameters that
-rely on the independence of the features. Ridge Regression however,
-addresses Linear Regression’s issue of using Ordinary Least Squares
-(OLS), by using a penalty parameter that works to minimize the size of
-coefficients (penalized residual sum of squares).</p>
+Vector Regression to attempt and fit our model. A <strong>Support Vector
+Regression</strong> model is a method of SVM that only depends on the
+training set due to its inherent functionality that ignores samples who
+have predictions close to the target.</p>
 <p>In the <code>sklearn</code> module, there are various estimator
-objects for Ridge Regression. For this problem we will be using the
-<code>RidgeCV()</code> model, which conveniently builds a Ridge
-Regression with a built in cross-validation feature of the alpha
-parameter that works identically to a cross-validated grid search to
-tune the hyperparameters for our final model. Although this model in
-<code>sklearn</code> prefers Leave-One-Out Cross-Validation, I have
-overrode the CV process to be a Repeated Stratified K-Fold with 5 folds
-and 5 repeats.</p>
+objects for Support Vector Regression. For this problem we will be using
+the <code></code>.</p>
 <pre class="python fold-show"><code>rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
 
 # sc_X_train = StandardScaler()
@@ -4070,121 +4048,76 @@ y_prediction = svr_model.predict(X_sdsurf_test)
 svr_model_predR2 = r2_score(y_sdsurf_test, y_prediction) # same as ridgecv_model_score
 svr_model_predMSE = mean_squared_error(y_sdsurf_test, y_prediction)
 
-# visual = ResidualsPlot(RidgeCV(alphas=ridge_alphas, cv=rkf), hist=False)
-# visual.fit(X_sdsurf_train, y_sdsurf_train)
-# visual.score(X_sdsurf_test, y_sdsurf_test)
-# visual.show()
-
-print(&quot;Estimated Parameters: &quot;, svr_model_fitparams)</code></pre>
-<pre><code>## Estimated Parameters:  &lt;bound method BaseEstimator.get_params of NuSVR()&gt;</code></pre>
-<pre class="python fold-show"><code>print(&quot;\nBest Estimated R^2 Score: &quot;, svr_model_R2)</code></pre>
-<pre><code>## 
-## Best Estimated R^2 Score:  0.06445187172010536</code></pre>
-<pre class="python fold-show"><code>print(&quot;\nR^2 Prediction Error Score: &quot;, svr_model_predR2)</code></pre>
-<pre><code>## 
-## R^2 Prediction Error Score:  0.06445187172010536</code></pre>
-<pre class="python fold-show"><code>print(&quot;\nMSE Prediction Error Score: &quot;, svr_model_predMSE)</code></pre>
-<pre><code>## 
-## MSE Prediction Error Score:  7.01788757721251</code></pre>
-<pre class="python fold-show"><code>print(&quot;\nRMSE Prediction Error Score: &quot;, sqrt(svr_model_predMSE))</code></pre>
-<pre><code>## 
-## RMSE Prediction Error Score:  2.649129588603115</code></pre>
-<p>Time for this code chunk to run: 34.1634156147639</p>
+print(&quot;Estimated Parameters: &quot;, svr_model_fitparams, &quot;\nBest Estimated R^2 Score: &quot;, svr_model_R2, &quot;\n\nR^2 Prediction Error Score: &quot;, svr_model_predR2, &quot;\nMSE Prediction Error Score: &quot;, svr_model_predMSE, &quot;\nRMSE Prediction Error Score: &quot;, sqrt(svr_model_predMSE))</code></pre>
+<p>Time for this code chunk to run: 0.00107312202453613</p>
 </div>
 <div id="k-nearest-neighbors-regression" class="section level2">
 <h2>K-Nearest Neighbors Regression</h2>
 <pre class="python fold-show"><code>rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
 
-# sc_X_train = StandardScaler()
-# sc_y_train = StandardScaler()
-# X_train_tranformed = sc_X_train.fit_transform(X_sdsurf_train)
-# y_train_tranformed = sc_y_train.fit_transform(y_sdsurf_train)
+KNN_model = KNeighborsRegressor(algorithm=&#39;kd_tree&#39;, leaf_size=55000)
 
-KNN_model = KNeighborsRegressor()
 KNN_model = KNN_model.fit(X_sdsurf_train, y_sdsurf_train)
 KNN_model_fitparams = KNN_model.get_params
+KNN_model_graph = KNN_model.kneighbors_graph(X_sdsurf_train)
 
-KNN_model_R2 = KNN_model.score(X_sdsurf_test, y_sdsurf_test)
+KNN_y_prediction = KNN_model.predict(X_sdsurf_test)
 
-y_prediction = KNN_model.predict(X_sdsurf_test)
-
-KNN_model_predR2 = r2_score(y_sdsurf_test, y_prediction) # same as ridgecv_model_score
+KNN_model_predR2 = KNN_y_prediction.score(X_sdsurf_test, y_sdsurf_test)
 KNN_model_predMSE = mean_squared_error(y_sdsurf_test, y_prediction)
 
-# visual = ResidualsPlot(RidgeCV(alphas=ridge_alphas, cv=rkf), hist=False)
-# visual.fit(X_sdsurf_train, y_sdsurf_train)
-# visual.score(X_sdsurf_test, y_sdsurf_test)
-# visual.show()
-
-print(&quot;Estimated Parameters: &quot;, KNN_model_fitparams)</code></pre>
-<pre><code>## Estimated Parameters:  &lt;bound method BaseEstimator.get_params of KNeighborsRegressor()&gt;</code></pre>
-<pre class="python fold-show"><code>print(&quot;\nBest Estimated R^2 Score: &quot;, KNN_model_R2)</code></pre>
-<pre><code>## 
-## Best Estimated R^2 Score:  0.656779427108612</code></pre>
-<pre class="python fold-show"><code>print(&quot;\nR^2 Prediction Error Score: &quot;, KNN_model_predR2)</code></pre>
-<pre><code>## 
-## R^2 Prediction Error Score:  0.656779427108612</code></pre>
-<pre class="python fold-show"><code>print(&quot;\nMSE Prediction Error Score: &quot;, KNN_model_predMSE)</code></pre>
-<pre><code>## 
-## MSE Prediction Error Score:  2.5746226430561667</code></pre>
-<pre class="python fold-show"><code>print(&quot;\nRMSE Prediction Error Score: &quot;, sqrt(KNN_model_predMSE))</code></pre>
-<pre><code>## 
-## RMSE Prediction Error Score:  1.6045630692048745</code></pre>
-<p>Time for this code chunk to run: 15.6122949123383</p>
-</div>
-<div id="random-forest-models" class="section level2">
-<h2>Random Forest Models</h2>
+print(&quot;Estimated Parameters: &quot;, KNN_model_fitparams, &quot;\n\nR^2 Prediction Error Score: &quot;, KNN_model_predR2, &quot;\nMSE Prediction Error Score: &quot;, KNN_model_predMSE, &quot;\nRMSE Prediction Error Score: &quot;, sqrt(KNN_model_predMSE))</code></pre>
+<p>Time for this code chunk to run: 0.00129389762878418</p>
 </div>
 <div id="boosted-tree-models" class="section level2">
 <h2>Boosted Tree Models</h2>
+<p>In the class of <strong>Boosted Tree Models</strong>,
+<code>sklearn</code> provides us with a plethora of options to consider.
+For this project we will be using a <strong>Histogram-Based Gradient
+Boosting Tree Regressor</strong> to attempt and fit our model. Similar
+to the common <strong>Gradient Boosting Tree Regressor</strong>, which
+builds an additive model in a forward stage-wise fashion optimizating
+arbitrary differentiable loss functions, this model estimator we will
+use is encourages by <code>sklearn</code> “when the number of samples is
+larger than tens of thousands of samples” due to its functionality that
+is “<strong>orders of magnitude faster</strong>”. By using bin sizes to
+reduce the number of points to split on, we are able to train a model on
+our very large data set of continuous values.</p>
+<pre class="python fold-show"><code>rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
+
+HGBoost_model = HistGradientBoostingRegressor(loss=&#39;squared_error&#39;, random_state=seed_val)
+# number of iterations of the boosting process
+HGBoost_num_iter = HGBoost_model.n_iter_
+# number of tree that are built at each iteration
+HGBoost_tree_per_iter = HGBoost_model.n_trees_per_iteration_
+# scores at each iteration on the training data
+HGBoost_train_score = HGBoost_model.train_score_
+# scores at each iteration on the held-out validation data
+HGBoost_val_score = HGBoost_model.validation_score_
+
+HGBoost_model = HGBoost_model.fit(X_sdsurf_train, y_sdsurf_train)
+HGBoost_model_fitparams = HGBoost_model.get_params
+
+HGBoost_y_prediction = HGBoost_model.predict(X_sdsurf_test)
+
+HGBoost_model_predR2 = HGBoost_y_prediction.score(X_sdsurf_test, y_sdsurf_test)
+HGBoost_model_predMSE = mean_squared_error(y_sdsurf_test, y_prediction)
+
+print(&quot;Number of Iterations of the Boosting Process: &quot;, HGBoost_num_iter, &quot;\nNumber of Trees Built at each Iteration: &quot;, HGBoost_tree_per_iter, &quot;\nScores at each Iteration on the Training Data: &quot;, HGBoost_train_score, &quot;\nScores at each Iteration on the Validation Data: &quot;, HGBoost_val_score, &quot;\n\nR^2 Prediction Error Score: &quot;, HGBoost_model_predR2, &quot;\nMSE Prediction Error Score: &quot;, HGBoost_model_predMSE, &quot;\nRMSE Prediction Error Score: &quot;, sqrt(HGBoost_model_predMSE))</code></pre>
+<p>Time for this code chunk to run: 0.00266504287719727</p>
 </div>
-<div id="linear-discriminant-analysis" class="section level2">
-<h2>Linear Discriminant Analysis</h2>
 </div>
-</div>
-<div id="model-selection-and-performance" class="section level1">
-<h1>Model Selection and Performance</h1>
-<div id="table-andor-graph-describing-the-performance-of-my-best-fitting-model-on-test-data" class="section level2">
-<h2>Table and/or Graph Describing the Performance of my Best Fitting
-Model on Test Data</h2>
-<p>BLANK</p>
-</div>
-<div id="describe-the-best-fitting-model-along-with-the-quality-of-its-predictions" class="section level2">
-<h2>Describe the Best-Fitting Model (along with the quality of its
-predictions)</h2>
-<p>BLANK</p>
-</div>
-</div>
-<div id="conclusions" class="section level1">
-<h1>Conclusions</h1>
+<div id="whos-our-best-fitting-model" class="section level1">
+<h1>Who’s our Best-Fitting Model?</h1>
+<pre class="python"><code>print(&quot;Best Estimated MSE Score: &quot;, ridgecv_model_bestMSE, &quot;\nBest Estimated RMSE Score: &quot;, sqrt(ridgecv_model_bestMSE), &quot;\n\nR^2 Prediction Error Score: &quot;, ridgecv_model_predR2, &quot;\nMSE Prediction Error Score: &quot;, ridgecv_model_predMSE, &quot;\nRMSE Prediction Error Score: &quot;, sqrt(ridgecv_model_predMSE))
+
+print(&quot;Estimated Parameters: &quot;, svr_model_fitparams, &quot;\nBest Estimated R^2 Score: &quot;, svr_model_R2, &quot;\n\nR^2 Prediction Error Score: &quot;, svr_model_predR2, &quot;\nMSE Prediction Error Score: &quot;, svr_model_predMSE, &quot;\nRMSE Prediction Error Score: &quot;, sqrt(svr_model_predMSE))
+
+print(&quot;Estimated Parameters: &quot;, KNN_model_fitparams, &quot;\n\nR^2 Prediction Error Score: &quot;, KNN_model_predR2, &quot;\nMSE Prediction Error Score: &quot;, KNN_model_predMSE, &quot;\nRMSE Prediction Error Score: &quot;, sqrt(KNN_model_predMSE))
+
+print(&quot;Number of Iterations of the Boosting Process: &quot;, HGBoost_num_iter, &quot;\nNumber of Trees Built at each Iteration: &quot;, HGBoost_tree_per_iter, &quot;\nScores at each Iteration on the Training Data: &quot;, HGBoost_train_score, &quot;\nScores at each Iteration on the Validation Data: &quot;, HGBoost_val_score, &quot;\n\nR^2 Prediction Error Score: &quot;, HGBoost_model_predR2, &quot;\nMSE Prediction Error Score: &quot;, HGBoost_model_predMSE, &quot;\nRMSE Prediction Error Score: &quot;, sqrt(HGBoost_model_predMSE))</code></pre>
 <div id="outcomes-of-fitted-models" class="section level2">
 <h2>Outcomes of Fitted Models</h2>
-<p>BLANK</p>
-</div>
-<div id="performance-of-models" class="section level2">
-<h2>Performance of Models</h2>
-<p>BLANK</p>
-</div>
-</div>
-<div id="questions-and-concerns" class="section level1 tabset">
-<h1 class="tabset">Questions and Concerns</h1>
-<div id="anticipated-problems-or-difficulties" class="section level2">
-<h2>Anticipated problems or difficulties</h2>
-<ul>
-<li>Possible issues with universalizing variables across the data sets
-that are from multiple sources<br />
-</li>
-<li>Using more variables than necessary in building of the model<br />
-</li>
-<li>Choosing whether or not to focus on a specific surf break, city,
-region, etc. (will most likely start small scale and expand out if
-doable)<br />
-</li>
-<li>Figuring out how to incorporate daily web-scraped data on specific
-surf breaks into prediction since <a href="https://www.ndbc.noaa.gov/historical_data.shtml#stdmet">NOAA’s
-Historical National Buoy Data</a> cannot be applied to a specific
-break</li>
-</ul>
 </div>
 </div>
 
