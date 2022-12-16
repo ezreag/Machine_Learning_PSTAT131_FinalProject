@@ -40,7 +40,7 @@ knitr::knit_hooks$set(time_it = local({
 
 For this Machine Learning project I wanted to fit models that gave me information that I wish I had easy access to on a daily basis, something that I would use everyday and something others could potentially find useful as well. Almost every day during our Summer Breaks, at 6:30am on the dot, me and my friends routinely went for an early morning sunrise surf sessions to start our days. Whether it was projected to be amazing conditions or even if the surf was as flat as a pool, we made it an effort to at least go for an early morning drive hoping for even the possibility of some fun surf. However, on those days that one of us or all of us were too lazy to wake up to our alarms to drive 10-20 minutes and check the surf, we always had Surfline to give us a surf report and an early morning camera streaming of our break destination of the day.  
   
-![Fig. 1: Surfline Application Poster](131_Project_images/surfline-2019-fi.jpg){width=100%}
+![Fig. 1: Surfline Application Poster](131_Project_Images/surfline-2019-fi.jpg){width=100%}
   
 For those who aren't familiar, Surfline is a popular app used among the surf community to check daily and future surf forecast and swell conditions, as well as access to live camera feeds of your local surf break of choice. However, as a subscription based service, Surfline requests a subscription fee in order for a user to access 7-day forecast reports, view camera feeds of certain popular surf breaks, and to remove a 3-time a week limit to check daily conditions. Although a great application that I still use today, sometimes it isn't the most easily accessible way to check the surf forecast 7 days in the future.  
   
@@ -121,27 +121,7 @@ import scipy as sp
 import patsy as pat
 import statsmodels as stmd
 import random
-from yellowbrick.regressor import PredictionError, ResidualsPlot
-
 import sklearn
-from sklearn.model_selection import (
-  train_test_split, 
-  RepeatedStratifiedKFold, 
-  cross_val_score
-  )
-from sklearn.decomposition import PCA
-from sklearn.feature_selection import SelectKBest
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.linear_model import Ridge
-from sklearn.svm import SVR
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.ensemble import HistGradientBoostingRegressor
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.metrics import accuracy_score
-from sklearn.pipeline import (
-  Pipeline, 
-  FeatureUnion
-  )
 ```
 
 # Data Cleaning {.tabset}
@@ -610,7 +590,11 @@ from sklearn.pipeline import (
 
 ## Cross Validation  
 
-For this project, of our models will mostly be using a Repeated Stratified K-Fold Cross-Validation with 5 folds of the training data and 5 repeats. According to `sklearn`, Repeated Stratified K-Fold Cross-Validation is not recommended for large data sets where observations exceed 10,000 observations, which is the case for this project's data set, due to the fact that this amount of data are more than sufficiently cross validated with the simpler automated methods such as Leave-One-Out or regular K-Fold. On another note, unlike classification problems that require the use of the `RepeatedStratifiedKFold()` method for repeated stratified k-folds, regression problems (where the target/response variable is a continuous data type) are automatically create repeated stratified k-folds with the `RepeatedKFold()` method. Depending on if the model is linear, strictly for regression, is fitting a large data set (observations > 10,000), has an automated preferred CV strategy; `sklearn` will usually default to supporting a simple `KFold()` cross-validation.  
+For this project, of our models will mostly be using a Repeated Stratified K-Fold Cross-Validation with 5 folds of the training data and 5 repeats. 
+
+![Fig. 2: K-Fold Visual Explanation](131_Project_Images/kfold_image.png){width=100%}
+
+According to `sklearn`, Repeated Stratified K-Fold Cross-Validation is not recommended for large data sets where observations exceed 10,000 observations, which is the case for this project's data set, due to the fact that this amount of data are more than sufficiently cross validated with the simpler automated methods such as Leave-One-Out or regular K-Fold. On another note, unlike classification problems that require the use of the `RepeatedStratifiedKFold()` method for repeated stratified k-folds, regression problems (where the target/response variable is a continuous data type) are automatically create repeated stratified k-folds with the `RepeatedKFold()` method. Depending on if the model is linear, strictly for regression, is fitting a large data set (observations > 10,000), has an automated preferred CV strategy; `sklearn` will usually default to supporting a simple `KFold()` cross-validation.  
 
 ## Performance Metrics  
 
@@ -685,51 +669,94 @@ As we can see above we used the following process to evaluate our model:
   5. Next we begin the process of evaluating our model using `predict()` to use our test set of X to make predictions of Y,  
   6. Finally to make an evaluation of our final Ridge Regression model, we compare our predicted values of Y to the true values of Y in our `y_sdsurf_test` data set
 
-```{python time_it=TRUE, cache=TRUE, eval=F, include=F}
+```{python time_it=TRUE}
 estimators = []
 estimators.append(('standardize', StandardScaler()))
-estimators.append(('ridge', Ridge()))
+estimators.append(('ridge', RidgeCV()))
 ridge_model = Pipeline(estimators)
+ridge_model
 ```
 
 ## Support Vector Machines
 
-Within the class of supervised learning methods we call **Support Vector Machines** (SVMs), we will be Support Vector Regression to attempt and fit our model. A **Support Vector Regression** model is a method of SVM that only depends on the training set due to its inherent functionality that ignores samples who have predictions close to the target.
+Within the class of supervised learning methods we call **Support Vector Machines** (SVMs), we will be Support Vector Regression to attempt and fit our model. A **Support Vector Regression** model is a method of SVM that only depends on the training set due to its inherent functionality that ignores samples who have predictions close to the target.  
+
+### Nu SVR
 
 In the `sklearn` module, there are various estimator objects for Support Vector Regression. For this problem we will be using the ` `.  
 
-```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=F}
+```{python class.source="fold-show", time_it=TRUE, cache=TRUE}
 rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
 
 # sc_X_train = StandardScaler()
 # sc_y_train = StandardScaler()
-# X_train_tranformed = sc_X_train.fit_transform(X_sdsurf_train)
-# y_train_tranformed = sc_y_train.fit_transform(y_sdsurf_train)
+# X_train_transformed = sc_X_train.fit_transform(X_sdsurf_train)
+# y_train_transformed = sc_y_train.fit_transform(y_sdsurf_train)
 
-svr_model = NuSVR()
-svr_model = svr_model.fit(X_sdsurf_train, y_sdsurf_train)
-svr_model_fitparams = svr_model.get_params
+nusvr_model = NuSVR()
+nusvr_model = nusvr_model.fit(X_sdsurf_train, y_sdsurf_train)
+nusvr_model_fitparams = nusvr_model.get_params
 
-svr_model_R2 = svr_model.score(X_sdsurf_test, y_sdsurf_test)
+nusvr_model_R2 = nusvr_model.score(X_sdsurf_test, y_sdsurf_test)
 
-y_prediction = svr_model.predict(X_sdsurf_test)
+y_prediction = nusvr_model.predict(X_sdsurf_test)
 
-svr_model_predR2 = r2_score(y_sdsurf_test, y_prediction) # same as ridgecv_model_score
-svr_model_predMSE = mean_squared_error(y_sdsurf_test, y_prediction)
+nusvr_model_predR2 = r2_score(y_sdsurf_test, y_prediction) # same as ridgecv_model_score
+nusvr_model_predMSE = mean_squared_error(y_sdsurf_test, y_prediction)
 
-print("Estimated Parameters: ", svr_model_fitparams, "\nBest Estimated R^2 Score: ", svr_model_R2, "\n\nR^2 Prediction Error Score: ", svr_model_predR2, "\nMSE Prediction Error Score: ", svr_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(svr_model_predMSE))
+print("Estimated Parameters: ", nusvr_model_fitparams, "\nBest Estimated R^2 Score: ", nusvr_model_R2, "\n\nR^2 Prediction Error Score: ", nusvr_model_predR2, "\nMSE Prediction Error Score: ", nusvr_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(nusvr_model_predMSE))
 ```
 
-```{python time_it=TRUE, cache=TRUE, eval=F, include=F}
+```{python time_it=TRUE}
 estimators = []
 estimators.append(('standardize', StandardScaler()))
 estimators.append(('linear svr', LinearSVR()))
 svr_model = Pipeline(estimators)
+svr_model
+```
+
+### Linear SVR
+
+```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=F}
+rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
+
+scaler_X = StandardScaler().fit(X_sdsurf_train)
+scaler_y = StandardScaler().fit(y_sdsurf_train.values)
+X_train_transformed = scaler_X.transform(X_sdsurf_train)
+y_train_transformed = scaler_y.transform(y_sdsurf_train)
+X_test_transformed = scaler_X.transform(X_sdsurf_test)
+y_test_transformed = scaler_y.transform(y_sdsurf_test)
+
+svr_model = LinearSVR(random_state=seed_val)
+svr_model = svr_model.fit(X_train_transformed, y_train_transformed)
+svr_model_fitparams = svr_model.get_params
+
+svr_model_R2 = svr_model.score(X_test_transformed, y_test_transformed)
+
+y_prediction = svr_model.predict(X_test_transformed)
+
+svr_model_predR2 = r2_score(y_test_transformed, y_prediction) # same as ridgecv_model_score
+svr_model_predMSE = mean_squared_error(y_test_transformed, y_prediction)
+
+print("Estimated Parameters: ", svr_model_fitparams, "\nBest Estimated R^2 Score: ", svr_model_R2, "\n\nR^2 Prediction Error Score: ", svr_model_predR2, "\nMSE Prediction Error Score: ", svr_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(svr_model_predMSE))
+```
+
+```{python eval=F}
+print(X_sdsurf_train)
+print(y_sdsurf_train.values.reshape())
+```
+
+```{python time_it=TRUE}
+estimators = []
+estimators.append(('standardize', StandardScaler()))
+estimators.append(('linear svr', LinearSVR()))
+svr_model = Pipeline(estimators)
+svr_model
 ```
 
 ## K-Nearest Neighbors Regression
 
-```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=F}
+```{python class.source="fold-show", time_it=TRUE, cache=TRUE}
 rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
 
 KNN_model = KNeighborsRegressor(algorithm='kd_tree', leaf_size=55000)
@@ -740,27 +767,32 @@ KNN_model_graph = KNN_model.kneighbors_graph(X_sdsurf_train)
 
 KNN_y_prediction = KNN_model.predict(X_sdsurf_test)
 
-KNN_model_predR2 = KNN_y_prediction.score(X_sdsurf_test, y_sdsurf_test)
-KNN_model_predMSE = mean_squared_error(y_sdsurf_test, y_prediction)
+KNN_model_predR2 = KNN_model.score(X_sdsurf_test, y_sdsurf_test)
+KNN_model_predMSE = mean_squared_error(y_sdsurf_test, KNN_y_prediction)
 
 print("Estimated Parameters: ", KNN_model_fitparams, "\n\nR^2 Prediction Error Score: ", KNN_model_predR2, "\nMSE Prediction Error Score: ", KNN_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(KNN_model_predMSE))
 ```
 
-```{python time_it=TRUE, cache=TRUE, eval=F, include=F}
+```{python time_it=TRUE}
 estimators = []
 estimators.append(('standardize', StandardScaler()))
 estimators.append(('KNN Regressor', KNeighborsRegressor()))
 KNN_model = Pipeline(estimators)
+KNN_model
 ```
 
 ## Boosted Tree Models
 
-In the class of **Boosted Tree Models**, `sklearn` provides us with a plethora of options to consider. For this project we will be using a **Histogram-Based Gradient Boosting Tree Regressor** to attempt and fit our model. Similar to the common **Gradient Boosting Tree Regressor**, which builds an additive model in a forward stage-wise fashion optimizating arbitrary differentiable loss functions, this model estimator we will use is encourages by `sklearn` "when the number of samples is larger than tens of thousands of samples" due to its functionality that is "**orders of magnitude faster**". By using bin sizes to reduce the number of points to split on, we are able to train a model on our very large data set of continuous values.   
+In the class of **Boosted Tree Models**, `sklearn` provides us with a plethora of options to consider. For this project we will be using a **Histogram-Based Gradient Boosting Tree Regressor** to attempt and fit our model. Similar to the common **Gradient Boosting Tree Regressor**, which builds an additive model in a forward stage-wise fashion optimizing arbitrary differentiable loss functions, this model estimator we will use is encourages by `sklearn` "when the number of samples is larger than tens of thousands of samples" due to its functionality that is "**orders of magnitude faster**". By using bin sizes to reduce the number of points to split on, we are able to train a model on our very large data set of continuous values.   
 
-```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=F}
+According to the official documentation from `sklearn`'s website, the process of the `HistGradientBoostingRegressor()` method is as follows. As a sub-method of the `ensemble` class, it works similarly to a `GradientBoostingRegressor()` with a bottleneck procedure of building decision trees. However, as opposed to the tradition Gradient Boosting Regressor Tree procedure, the Histogram Based Gradient Boosting Tree Regressor does not require sorting the values of features but rather uses the histogram data-structure that "implicitly" orders the samples. Due to this, we have a much faster model building procedure with a O-notation runtime of $O(n_{\text{features}} \times n)$ as opposed to `GradientBoostingRegressor()`'s much more lengthy complex runtime of $O(n_{\text{features}} \times nlog(n))$.  
+
+```{python class.source="fold-show", time_it=TRUE, cache=TRUE}
 rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
 
 HGBoost_model = HistGradientBoostingRegressor(loss='squared_error', random_state=seed_val)
+
+HGBoost_model = HGBoost_model.fit(X_sdsurf_train, y_sdsurf_train)
 # number of iterations of the boosting process
 HGBoost_num_iter = HGBoost_model.n_iter_
 # number of tree that are built at each iteration
@@ -769,35 +801,82 @@ HGBoost_tree_per_iter = HGBoost_model.n_trees_per_iteration_
 HGBoost_train_score = HGBoost_model.train_score_
 # scores at each iteration on the held-out validation data
 HGBoost_val_score = HGBoost_model.validation_score_
-
-HGBoost_model = HGBoost_model.fit(X_sdsurf_train, y_sdsurf_train)
 HGBoost_model_fitparams = HGBoost_model.get_params
 
 HGBoost_y_prediction = HGBoost_model.predict(X_sdsurf_test)
 
-HGBoost_model_predR2 = HGBoost_y_prediction.score(X_sdsurf_test, y_sdsurf_test)
-HGBoost_model_predMSE = mean_squared_error(y_sdsurf_test, y_prediction)
+HGBoost_model_predR2 = HGBoost_model.score(X_sdsurf_test, y_sdsurf_test)
+HGBoost_model_predMSE = mean_squared_error(y_sdsurf_test, HGBoost_y_prediction)
 
 print("Number of Iterations of the Boosting Process: ", HGBoost_num_iter, "\nNumber of Trees Built at each Iteration: ", HGBoost_tree_per_iter, "\nScores at each Iteration on the Training Data: ", HGBoost_train_score, "\nScores at each Iteration on the Validation Data: ", HGBoost_val_score, "\n\nR^2 Prediction Error Score: ", HGBoost_model_predR2, "\nMSE Prediction Error Score: ", HGBoost_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(HGBoost_model_predMSE))
 ```
 
-```{python time_it=TRUE, cache=TRUE, eval=F, include=F}
+```{python time_it=TRUE}
 estimators = []
 estimators.append(('standardize', StandardScaler()))
 estimators.append(('HG Boosted Tree', HistGradientBoostingRegressor()))
 HGBoost_model = Pipeline(estimators)
+HGBoost_model
 ```
 
 # Who's our Best-Fitting Model?
 
-```{python eval=F}
-print("Best Estimated MSE Score: ", ridgecv_model_bestMSE, "\nBest Estimated RMSE Score: ", sqrt(ridgecv_model_bestMSE), "\n\nR^2 Prediction Error Score: ", ridgecv_model_predR2, "\nMSE Prediction Error Score: ", ridgecv_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(ridgecv_model_predMSE))
+```{python class.source="fold-show"}
+RidgeCV_list = [["MSE Estimate", 1.2065245693118951], ["RMSE Estimate", 1.0984191227905198], ["R^2 Prediction Error", 0.6491233448758329], ["MSE Prediction Error", 2.6320537070147103], ["RMSE Prediction Error", 1.6223605354589683]]
+# Ridge Regression Model 
+## Run-Time: 2 MINUTES
+##
+## Best Estimated MSE Score:  1.2065245693118951 
+## Best Estimated RMSE Score:  1.0984191227905198 
+## 
+## R^2 Prediction Error Score:  0.6491233448758329 
+## MSE Prediction Error Score:  2.6320537070147103 
+## RMSE Prediction Error Score:  1.6223605354589683
 
-print("Estimated Parameters: ", svr_model_fitparams, "\nBest Estimated R^2 Score: ", svr_model_R2, "\n\nR^2 Prediction Error Score: ", svr_model_predR2, "\nMSE Prediction Error Score: ", svr_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(svr_model_predMSE))
+NuSVR_list = [["Estimated Parameters", "<bound method BaseEstimator.get_params of NuSVR()>"], ["R^2 Prediction Error", 0.06445187172010536], ["MSE Prediction Error", 7.01788757721251], ["RMSE Prediction Error", 2.649129588603115]]
+# NU Support Vector Regressor Model 
+## Run-Time: 42 MINUTES
+##
+## Estimated Parameters:  <bound method BaseEstimator.get_params of NuSVR()> 
+## Best Estimated R^2 Error Score:  0.06445187172010536 
+## 
+## R^2 Prediction Error Score:  0.06445187172010536 
+## MSE Prediction Error Score:  7.01788757721251 
+## RMSE Prediction Error Score:  2.649129588603115
 
-print("Estimated Parameters: ", KNN_model_fitparams, "\n\nR^2 Prediction Error Score: ", KNN_model_predR2, "\nMSE Prediction Error Score: ", KNN_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(KNN_model_predMSE))
+LinearSVR_list = []
+# Linear Support Vector Regressor Model 
+## Run-Time: N/A MINUTES
+##
+## Estimated Parameters:  NA
+## Best Estimated R^2 Error Score:  NA 
+## 
+## R^2 Prediction Error Score:  NA 
+## MSE Prediction Error Score:  NA 
+## RMSE Prediction Error Score:  NA
 
-print("Number of Iterations of the Boosting Process: ", HGBoost_num_iter, "\nNumber of Trees Built at each Iteration: ", HGBoost_tree_per_iter, "\nScores at each Iteration on the Training Data: ", HGBoost_train_score, "\nScores at each Iteration on the Validation Data: ", HGBoost_val_score, "\n\nR^2 Prediction Error Score: ", HGBoost_model_predR2, "\nMSE Prediction Error Score: ", HGBoost_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(HGBoost_model_predMSE))
+KNNRegression_list = [["Estimated Parameters", "<bound method BaseEstimator.get_params of KNeighborsRegressor(algorithm='kd_tree', leaf_size=55000)>"], ["R^2 Prediction Error", 0.656779427108612], ["MSE Prediction Error", 2.5746226430561667], ["RMSE Prediction Error", 1.6045630692048745]]
+# K-Nearest Neighbors Regressor Model
+## Run-Time: 6 MINUTES
+##
+## Estimated Parameters:  <bound method BaseEstimator.get_params of KNeighborsRegressor(algorithm='kd_tree', leaf_size=55000)> 
+## 
+## R^2 Prediction Error Score:  0.656779427108612 
+## MSE Prediction Error Score:  2.5746226430561667 
+## RMSE Prediction Error Score:  1.6045630692048745
+
+HGBoostingTree_list = []
+# Histogram Based Gradient Boosted Tree Regressor Model 
+## Run-Time: 5 MINUTES
+##
+## Number of Iterations of the Boosting Process:  100
+## Number of Trees Build at each Iteration:  1 
+## Scores at each Iteration on the Training Data:  NA
+## Scores at each Iteration on the Validation Data: NA
+##
+## R^2 Prediction Error Score:  0.7927232133069582 
+## MSE Prediction Error Score:  1.554858742598466 
+## RMSE Prediction Error Score:  1.2469397509897846
 ```
 
 ## Outcomes of Fitted Models
