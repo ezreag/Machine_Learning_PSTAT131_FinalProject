@@ -292,7 +292,7 @@ print(sandiego_46047_df.dtypes)
 
 Now that we have our cleaned data, before we start splitting our dataframe for training and testing, let's first take some time to learn more about our data. In order to avoid any later errors in our predictions, we want to verify our understanding of how our response variable `WVHT` is influenced by our chosen predictor variables, and how our predictor variables influence one another.  
 
-## Checking the Distribution of All Variables
+## Checking Variable Distributions
 
 Firstly, to understand our response variable `WVHT` a little more, we will start by looking at its distribution using a histogram visualization.  
 
@@ -314,9 +314,9 @@ sandiego_46047_df.skew(axis=0, numeric_only=True)
 
 With this function, values that are not close to zero are not normally distributed. As can be seen, we have very skewed variables. `WVHT` outputs a value of $1.241757$ which indicates a very strong right skewed distribution, and `WDIR` outputs a value of $-2.622121$, indicating a very strong left skew. `APD` also presents a fairly moderate/severe right skew with a value of $0.992836$, while all other predictor variables appear to be approximately symmetric.  
 
-## Response vs. Integer Type Predictor Variables
+## Target vs. Discrete Predictors
 
-Now that we have found clear evidence of a non-normally distributed response variable, we take another step towards understanding `WVHT` by utilizing boxplots to view `WVHT` responding to our `int` data type predictors, a.k.a. whole number/integer values.  
+Now that we have found clear evidence of a non-normally distributed response variable, we take another step towards understanding `WVHT` by utilizing box-plots to view `WVHT` responding to our `int` data type predictors, a.k.a. whole number/integer values.  
 
 Knowing that seasons and the time of year are well known indicators of surf, we will start with a box plot of wave height (`WVHT`) for each month (`MM`) over the course of the 3 decades recorded in the data.  
 ```{python results='hide'}
@@ -344,7 +344,7 @@ plt.show()
 
 As expected, it seems like `WVHT`'s distribution for the mean, the interquartile range, and maximum/minimum values are not consistent for each month of data. With this we can assume that significant wave height `WVHT` is most likely dependent on the month `MM` of the year.  
 
-Following this result, let's create another boxplot to check and see if we have any clear visible trends in our significant wave height over the course of the 3 decades of data by visualizing `WVHT` per `YY`.  
+Following this result, let's create another box-plot to check and see if we have any clear visible trends in our significant wave height over the course of the 3 decades of data by visualizing `WVHT` per `YY`.  
 
 ```{python results='hide'}
 SD_1991_wvht = sandiego_46047_df["WVHT"].loc[sandiego_46047_df['YY'] == 1991]
@@ -383,16 +383,16 @@ plt.ylabel("WVHT in Feet")
 plt.show()
 ```
 
-From a visual standpoint, in comparison to our boxplot of `WVHT` each `MM`, there does not seem to be a notable trend in `WVHT` each `YY` from 1991 - 2021. From this boxplot alone, we can make a general assumption that our response variable `WVHT` is most likely dependent of `YY` in near future years.  
+From a visual standpoint, in comparison to our box-plot of `WVHT` each `MM`, there does not seem to be a notable trend in `WVHT` each `YY` from 1991 - 2021. From this box-plot alone, we can make a general assumption that our response variable `WVHT` is most likely dependent of `YY` in near future years.  
 
-## Visualizing Correlation of Variables
+## Visualizing Variable Correlations
 
 Now that we've taken some visual interpretations of `WVHT` responding to predictors, we'll next look at some numerical approaches to evaluating the interaction of our target variable and its predictors.  
 
 Firstly, let us take a look at the correlation between our variables using a correlation matrix and correlation heat map plot.  
 ```{python}
-sandiego_46047_df.corr()
-corrplot = sb.heatmap(sandiego_46047_df.corr())
+sandiego_46047_df.corr(numeric_only=True)
+corrplot = sb.heatmap(sandiego_46047_df.corr(numeric_only=True))
 plt.show()
 ```
 
@@ -530,7 +530,7 @@ As I've briefly mentioned in a previous section (Model Building Preparation), we
 
 Dissimilar to `R`, `Python` does not have a `workflow()` function, but it does have a similar method of **Pipelines**. A pipeline can be explained as a sort of guidelines that are written as a sequence of rules for data preprocessing, modeling building, transformations, and prediction metrics. Multiple pipelines can be made with different "rules" depending on the nature of the training data, model being fit, and more.  
 
-The pipeline created from this process is what `sklearn` calls a **Modeling Pipeline**. In `R`, after splitting and pre-processing our data, one normally follows a step by step procedure that folds their training data, sets up a model and workflow, creates a parameter grid, tunes a model, and selects parameters based on performance metrics. However in `Python`, the `sklearn` module allows us to do this all simultaneously and a little quicker and cleaner with the `sklearn.pipeline` class's functionality. Within each pipeline, created using `sklearn.pipeline.Pipeline()` or `sklearn.pipeline.make_pipeline()`, we not only can we apply the aforementioned procedures, but we can also evaluate our pipeline using a chosen **Resampling** and/or **Cross-Validation** procedure to again address the persisting issue of data leakage and reproducibility.  
+The pipeline created from this process is what `sklearn` calls a **Modeling Pipeline**. In `R`, after splitting and pre-processing our data, one normally follows a step by step procedure that folds their training data, sets up a model and workflow, creates a parameter grid, tunes a model, and selects parameters based on performance metrics. However in `Python`, the `sklearn` module allows us to do this all simultaneously and a little quicker and cleaner with the `sklearn.pipeline` class's functionality. Within each pipeline, created using `sklearn.pipeline.Pipeline()` or `sklearn.pipeline.make_pipeline()`, we not only can we apply the aforementioned procedures, but we can also evaluate our pipeline using a chosen **Re-sampling** and/or **Cross-Validation** procedure to again address the persisting issue of data leakage and reproducibility.  
 
 The advantage of using this pipeline workflow is that as a user of Machine Learning, we can evaluate the pipelines directly. This means are able to focus solely on the outcome and accuracy of a pipeline as opposed to; what specific "rules" `Pipeline()` chooses to use for data pre-processing and transformation, and/or which configuration of hyperparameters from a grid search it chooses.  
 
@@ -605,7 +605,7 @@ Between Classification problems and Regression problems, we use very different m
 
   1. Classification Metrics:  
       - **Confusion Matrices**  
-          - a table of the combinations of predicted and actual values (from the test data set) where the response/target variable is binary or multiclass  
+          - a table of the combinations of predicted and actual values (from the test data set) where the response/target variable is binary or multi-class  
       - **Log-Loss**  
           - a log representation of the probability estimate  
       - **Accuracy**  
@@ -651,7 +651,7 @@ Out of the many different variations of linear models, we will be using a Ridge 
 
 In the `sklearn` module, there are various estimator objects for Ridge Regression. For this problem we will be using the `RidgeCV()` model, which conveniently builds a Ridge Regression with a built in cross-validation feature of the alpha parameter that works identically to a cross-validated grid search to tune the hyperparameters for our final model. Although this model in `sklearn` prefers Leave-One-Out Cross-Validation, I have overrode the CV process to be a Repeated Stratified K-Fold with 5 folds and 5 repeats.  
 
-```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=FALSE}
+```{python class.source="fold-show", cache=TRUE, eval=FALSE}
 # Defining Cross-Validation Procedure
 rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
 # Defining Alpha Values to Grid Search
@@ -674,7 +674,7 @@ def ridgecv_model_other_metrics():
 
 Now that we've finished training our Ridge Regression model on the training data and calculated our performance metric scores, along with other metrics of our estimator, let's see how well our model did!  
 
-```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=FALSE}
+```{python class.source="fold-show", cache=TRUE, eval=FALSE}
 ridgecv_model_other_metrics()
 eval_performance_metrics(ridgecv_model)
 ```
@@ -694,7 +694,7 @@ As we can see above we used the following process to evaluate our model:
   5. Next we begin the process of evaluating our model using `predict()` to use our test set of X to make predictions of Y,  
   6. Finally to make an evaluation of our final Ridge Regression model, we compare our predicted values of Y to the true values of Y in our `y_sdsurf_test` data set
 
-```{python time_it=TRUE, cache=TRUE}
+```{python cache=TRUE}
 ridgecv_model_estimators = []
 ridgecv_model_estimators.append(('standardize', StandardScaler()))
 ridgecv_model_estimators.append(('RidgeCV', RidgeCV()))
@@ -712,7 +712,7 @@ Within this class of supervised learning methods we call Support Vector Machines
 
 In the `sklearn.svm` class, there are various estimator model objects for Support Vector Regression: `SVR()`, `NuSVR()`, and `LinearSVR()`. For this problem we will be using the `NuSVR()` model, which uses a slightly different formula in comparison to the traditional SVR and Linear SVR models, where our parameter `nu=` replaces the parameter epsilon and indicates an upper bound ("on the fraction of training errors") and a lower bound ("of the fraction of support vectors"). With a default of `nu=0.5`, we are able to set `nu` to be any value in the interval $(0, 1]$.  
 
-```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=FALSE}
+```{python class.source="fold-show", cache=TRUE, eval=FALSE}
 # Defining Cross-Validation Procedure
 rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
 
@@ -730,7 +730,7 @@ def NuSVR_model_other_metrics():
 
 Now that we've finished training our Nu-Support Vector Regression model on the training data and calculated our performance metric scores, along with other metrics of our estimator, let's see how well our model did!  
 
-```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=FALSE}
+```{python class.source="fold-show", cache=TRUE, eval=FALSE}
 NuSVR_model_other_metrics()
 eval_performance_metrics(NuSVR_model)
 ```
@@ -750,7 +750,7 @@ As we can see above we used the following process to evaluate our model:
   5. Next we begin the process of evaluating our model using our `eval_performance_metrics()` user-defined function to use our test set of X to make predictions of Y,  
   6. Finally to make an evaluations of our final Nu-Support Vector Regression model, we compare our predicted values of Y to the true values of Y in our `y_sdsurf_test` data set
 
-```{python time_it=TRUE, cache=TRUE}
+```{python cache=TRUE}
 NuSVR_model_estimators = []
 NuSVR_model_estimators.append(('standardize', StandardScaler()))
 NuSVR_model_estimators.append(('NuSVR', NuSVR()))
@@ -774,7 +774,7 @@ As we can see, although we have a very accurate prediction when `weights = 'dist
 
 Another important parameter of our model we should discuss prior, is our choice of a nearest neighbor algorithm. The `KNeighborsRegressor()` model still depends on one of the chosen algorithms passed to the `algorithm=` parameter to compute the nearest neighbors: **Brute Force**, **K-D Tree**, or a **Ball Tree**. The optimal choice of an algorithm parameter depends on a multitude of factors that varies per data set: number of samples $N$ and dimensionality $D$, intrinsic dimensionality and/or sparsity of the data, the amount of `k` neighbors set for a query point, and number of requested query points. For this project, my choice of a K-D Tree algorithm was largely due to the size of my data set. A **K-D Tree** algorithm is a method that allows a user to decrease the `leaf_size=` parameter to improve model construction time. Although the Brute Force algorithm is generally considered more efficient than tree-based algorithms, in this project's case it would be much slower as its query time increases as the number of samples $N$ and dimensionality $D$ grows: $O(DN)$. However, rather than a usual **Linearithmic** run-time of $O(DlogN)$ with K-D Trees, with a large data set, K-D Trees improve run-time to roughly become closer to a **Quadratic** time of $O(DN)$.  
 
-```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=FALSE}
+```{python class.source="fold-show", cache=TRUE, eval=FALSE}
 # Defining Cross-Validation Procedure
 rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
 
@@ -793,7 +793,7 @@ def KNN_model_other_metrics():
 
 Now that we've finished training our K-Nearest Neighbors Regression model on the training data and calculated our performance metric scores, along with other metrics of our estimator, let's see how well our model did!  
 
-```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=FALSE}
+```{python class.source="fold-show", cache=TRUE, eval=FALSE}
 KNN_model_other_metrics()
 eval_performance_metrics(KNN_model)
 ```
@@ -813,7 +813,7 @@ As we can see above we used the following process to evaluate our model:
   5. Next we begin the process of evaluating our model using our `eval_performance_metrics()` user-defined function to use our test set of X to make predictions of Y,  
   6. Finally to make an evaluations of our final K-Nearest Neighbors Regression model, we compare our predicted values of Y to the true values of Y in our `y_sdsurf_test` data set
   
-```{python time_it=TRUE, cache=TRUE}
+```{python cache=TRUE}
 KNN_model_estimators = []
 KNN_model_estimators.append(('standardize', StandardScaler()))
 KNN_model_estimators.append(('KNN Regressor', KNeighborsRegressor()))
@@ -829,7 +829,7 @@ In the class of **Boosted Tree Models**, `sklearn` provides us with a plethora o
 
 According to the official documentation from `sklearn`'s website, the process of the `HistGradientBoostingRegressor()` method is as follows. As a sub-method of the `ensemble` class, it works similarly to a `GradientBoostingRegressor()` with a bottleneck procedure of building decision trees. However, as opposed to the tradition Gradient Boosting Regressor Tree procedure, the Histogram Based Gradient Boosting Tree Regressor does not require sorting the values of features but rather uses the histogram data-structure that "implicitly" orders the samples. Due to this, we have a much faster model building procedure with a O-notation run-time of $O(n_{\text{features}} \times n)$ as opposed to `GradientBoostingRegressor()`'s much more lengthy complex run-time of $O(n_{\text{features}} \times nlog(n))$.  
 
-```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=FALSE}
+```{python class.source="fold-show", cache=TRUE, eval=FALSE}
 # Defining Cross-Validation Procedure
 rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
 
@@ -855,7 +855,7 @@ def HGBoost_model_other_metrics():
 
 Now that we've finished training our Histogram-Based Gradient Boosting Tree Regression model on the training data and calculated our performance metric scores, along with other metrics of our estimator, let's see how well our model did!  
 
-```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=FALSE}
+```{python class.source="fold-show", cache=TRUE, eval=FALSE}
 HGBoost_model_other_metrics()
 eval_performance_metrics(HGBoost_model)
 ```
@@ -875,7 +875,7 @@ As we can see above we used the following process to evaluate our model:
   5. Next we begin the process of evaluating our model using our `eval_performance_metrics()` user-defined function to use our test set of X to make predictions of Y,  
   6. Finally to make an evaluations of our final Histogram-Based Gradient Boosting Tree Regression model, we compare our predicted values of Y to the true values of Y in our `y_sdsurf_test` data set
 
-```{python time_it=TRUE, cache=TRUE}
+```{python cache=TRUE}
 HGBoost_model_estimators = []
 HGBoost_model_estimators.append(('standardize', StandardScaler()))
 HGBoost_model_estimators.append(('HG Boosted Tree', HistGradientBoostingRegressor()))
@@ -890,7 +890,7 @@ Sadly, it's a little difficult to make pretty looking tables when using `library
 ```{python class.source="fold-show"}
 RidgeCV_list = [["MSE Estimate", 1.2065245693118951], ["RMSE Estimate", 1.0984191227905198], ["R^2 Prediction Error", 0.6491233448758329], ["MAE Prediction Error", 1.198893973561779], ["MSE Prediction Error", 2.6320537070147103], ["RMSE Prediction Error", 1.6223605354589683]]
 # Ridge Regression Model 
-## Run-Time: 2.30 MINUTES
+## Run-Time: 6.75 MINUTES
 ##
 ## Best Estimated MSE Score:     1.2065245693118951 
 ## Best Estimated RMSE Score:    1.0984191227905198 
@@ -917,7 +917,7 @@ NuSVR_list = [["Estimated Parameters", "<bound method BaseEstimator.get_params o
 
 KNNRegression_list = [["Estimated Parameters", "<bound method BaseEstimator.get_params of KNeighborsRegressor(algorithm='kd_tree', leaf_size=55000)>"], ["R^2 Prediction Error", 0.656779427108612], ["MAE Prediction Error", 1.1528233611966563], ["MSE Prediction Error", 2.5746226430561667], ["RMSE Prediction Error", 1.6045630692048745]]
 # K-Nearest Neighbors Regressor Model
-## Run-Time: 11.7 MINUTES
+## Run-Time: 13.32 MINUTES
 ##
 ## Estimated Parameters:  <bound method BaseEstimator.get_params of KNeighborsRegressor(algorithm='kd_tree', leaf_size=55000)> 
 ## 
@@ -928,7 +928,7 @@ KNNRegression_list = [["Estimated Parameters", "<bound method BaseEstimator.get_
 
 HGBoostingTree_list = [["R^2 Prediction Error", 0.7927232133069582], ["MAE Prediction Error", 0.9096908421897236], ["MSE Prediction Error", 1.554858742598466], ["RMSE Prediction Error", 1.2469397509897846]]
 # Histogram Based Gradient Boosted Tree Regressor Model 
-## Run-Time: 5.64 MINUTES
+## Run-Time: 11.31 MINUTES
 ##
 ## Number of Iterations of the Boosting Process:     100 
 ## Number of Trees Built at each Iteration:          1 
@@ -943,17 +943,65 @@ HGBoostingTree_list = [["R^2 Prediction Error", 0.7927232133069582], ["MAE Predi
 
 As we can see for each of our 4 models, we have our final prediction error scores using the metrics $MAE$, $MSE$, $RMSE$, and $R^2$ to evaluate the performance of most of our models. So let's see who our best-performing model is...  
 
-# Who's our Best-Fitting Model?
+# Model Awards Ceremony!
 
-With a speedy run-time of 11.7 minutes, an $MAE = 0.9097$, $MSE= 1.5549$, $RMSE= 1.2469$, and most importantly an $R^2 = 0.7927$ or a $79.27\%$ prediction accuracy. We can confidently say that when using $100$ iterations of each of the boosting processes with $1$ tree built at each iteration, we can conclude our Histogram-Based Gradient Boosting Tree Regression Model is our best performing model!!!  
+Looking at my terrible makeshift `python in rmarkdown` table in the figure below, we can see a chart of the run-times and final prediction error score metrics ($R^2$, $MAE$, $MSE$, and $RMSE$) for each of our 4 Regression Models: Ridge Regression, Nu-Support Vector Regression, K-Nearest Neighbors Regression, and Histogram-Based Gradient Boosting Tree Regression.  
+
+However, before announcing the Best-Performing Model and its parameters, so that none of my models feel left out, I'm going to give out some of what I like to call **Model Performance Superlative Awards**!  
 
 ```{python class.source="fold-show"}
-##  _________________________________________________________________________________ 
-## | Regression Model    | Run-Time | R^2 Score | MAE Score | MSE Score | RMSE Score |
-## |_____________________|__________|___________|___________|___________|____________|
-## | Ridge Regression    | 2.30 MIN | 0.6491    | 1.1989    | 2.6321    | 1.6224     |
-## | NU Support Vector   | 42.0 MIN | 0.0645    | 1.9674    | 7.0179    | 2.6491     |
-## | K-Nearest Neighbors | 11.7 MIN | 0.6568    | 1.1528    | 2.5746    | 1.6046     |
-## | HB Gradient Boosted | 5.64 MIN | 0.7927    | 0.9097    | 1.5549    | 1.2469     |
-## |_____________________|__________|___________|___________|___________|____________|
+#  __________________________________________________________________________________ 
+# | Regression Model    | Run-Time  | R^2 Score | MAE Score | MSE Score | RMSE Score |
+# |---------------------|-----------|-----------|-----------|-----------|------------|
+# | Ridge Regression    | 6.75 MIN  | 0.6491    | 1.1989    | 2.6321    | 1.6224     |
+# | NU Support Vector   | 42.0 MIN  | 0.0645    | 1.9674    | 7.0179    | 2.6491     |
+# | K-Nearest Neighbors | 13.32 MIN | 0.6568    | 1.1528    | 2.5746    | 1.6046     |
+# | HB Gradient Boosted | 11.31 MIN | 0.7927    | 0.9097    | 1.5549    | 1.2469     |
+# |_____________________|___________|___________|___________|___________|____________|
 ```
+
+## "Gives a Pressing Knit Phobia"
+
+Thanks to `rmarkdown`'s chunk option `cache=TRUE`, this model was somewhat less of a hassle to run as time went on. Yet, despite this seemingly fool proof loop hole, this model still found a way to bring my HTML knitting run-time into the hours.  
+
+With a run-time averaging approximately $42$ Minutes per HTML Knit, I proudly present this years recipient of the "Gives a Pressing Knit Phobia" Award: the **Nu-Support Vector Regression Model**!!!  
+
+## "Was in the Final Submission I Guess"
+
+"No model is a bad model", is what you would think most would say to you to keep your model building spirits up, but sometimes as much as we love 'em, some models are just not meant to impress the audience or steal the show.  
+
+With a whopping, crowd-astonishing, ground-breaking $R^2$ Score of $0.0645$, or better put as an approximate $6.45\%$ prediction accuracy score, I am pleased to announce that this year the prestigious "Was in the Final Submission I Guess" Award (a.k.a "The Glorified Participation Award" Award) goes to yet again tonight's fan favorite: the **Nu-Support Vector Regression Model**!!!  
+
+## "You Made Life so Easy"
+
+Moving onto our last award before announcing our most important award, the "America's Next Top Model" Award, we will be giving out the "You Made Life so Easy" Award. This award goes to everyone's favorite model that they wished finished #1 this year: tall, beautiful, fit, efficient, and built-in hyperparameter tuning.  
+
+With a built-in functionality for hyperparameter searching and tuning, a fairly decent $R^2$ Score of $0.6491$, and lastly a quick efficient run-time of $6.75$ minutes per HTML knit to finish training, tuning-up, and evaluating; the winner of the 2022 "You Made Life so Easy" Award is the **Ridge CV Regression Model**!!!  
+
+## "America's Next Top Model"
+
+Moving onto the main event, the model we crown the model of all models (for this project), the model who needs no introduction...  
+
+...the recipient of this year's "America's Next Top Model" Award...  
+
+![:o](131_Project_Images/suspense_stock_pic.jpg){width=100%}
+
+...can be found in the next section after the commercial break :(  
+
+# Who's our Best-Fitting Model?
+
+Finally! Our recipient for the 2022 "America's Next Top Model" Award! Without further ado,  
+
+With a speedy run-time of $11.31$ minutes, an $MAE = 0.9097$, $MSE= 1.5549$, $RMSE= 1.2469$, and most importantly an $R^2 = 0.7927$, better interpreted as a $79.27\%$ prediction accuracy. We can confidently say that when using $100$ iterations of each of the boosting processes with $1$ tree built at each iteration, we can conclude our best performing model and this year's crowned "America's Next Top Model" is... the **Histogram-Based Gradient Boosting Tree Regression Model**!!!  
+
+# Final Thoughts
+
+As cliche as it is, I really have had a lot of fun with this project. Overall, I'd say I learned a lot having to translate the material I've learned throughout the 11 weeks of this course from `R` to `Python`. This process was most definitely a recursive loop of trials and errors and hours of knitting. Despite the somewhat occasionally tedious processes, I've gotten a much deeper understanding of Machine Learning in a way that I could have never gotten from a tutorial video or the chapter of a textbook. Getting the chance to research Machine Learning theory, methods, and applications through the lens of one of my favorite pastimes: surfing! I've gained knowledge in such a fun and exploratory manner, I know it'll take me a step closer to finding what kind of a future I want and where my niche is in the world of Data Science and Software Engineering.  
+
+Although I haven't created the next Surfline, I think my model will serve its short term purpose at the moment. Hopefully, after some additional research, considerations of other learning methods, some tinkering, and maybe the inclusion of some web-scraped data from other my projects; I could produce a better model to make some slightly less sup-par predictions.  
+
+New updates are hopefully soon to come!  
+
+To conclude this project, here's one of the very few pictures that exist of myself in the water. Yes I know I probably should have gone left.  
+
+![Figure 4: Black's Beach, San Diego (Winter 2020)](131_Project_Images/ezra.jpg){width=100%}
