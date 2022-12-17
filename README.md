@@ -60,25 +60,5 @@ import scipy as sp
 import patsy as pat
 import statsmodels as stmd
 import random
-from yellowbrick.regressor import PredictionError, ResidualsPlot
-
 import sklearn
-from sklearn.model_selection import (
-  train_test_split, 
-  RepeatedStratifiedKFold, 
-  cross_val_score
-  )
-from sklearn.decomposition import PCA
-from sklearn.feature_selection import SelectKBest
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.linear_model import Ridge
-from sklearn.svm import SVR
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.ensemble import HistGradientBoostingRegressor
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.metrics import accuracy_score
-from sklearn.pipeline import (
-  Pipeline, 
-  FeatureUnion
-  )
 ```
