@@ -651,7 +651,7 @@ Out of the many different variations of linear models, we will be using a Ridge 
 
 In the `sklearn` module, there are various estimator objects for Ridge Regression. For this problem we will be using the `RidgeCV()` model, which conveniently builds a Ridge Regression with a built in cross-validation feature of the alpha parameter that works identically to a cross-validated grid search to tune the hyperparameters for our final model. Although this model in `sklearn` prefers Leave-One-Out Cross-Validation, I have overrode the CV process to be a Repeated Stratified K-Fold with 5 folds and 5 repeats.  
 
-```{python class.source="fold-show", time_it=TRUE, cache=TRUE}
+```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=FALSE}
 # Defining Cross-Validation Procedure
 rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
 # Defining Alpha Values to Grid Search
@@ -672,11 +672,17 @@ def ridgecv_model_other_metrics():
   print("Best Estimated MSE Score:    ", ridgecv_model_bestMSE, "\nBest Estimated RMSE Score:   ", sqrt(ridgecv_model_bestMSE), "\nRegularization Parameter:    ", ridgecv_model_bestalpha, "\nEstimator's Num of Features: ", ridgecv_model_weights, "\nEstimated Weight Vectors:    ", ridgecv_model_weights, end='')
 ```
 
-Now that we've trained our model on the training data and calculated our performance metric scores, along with other metrics of our estimator, let's see how well our model did!  
+Now that we've finished training our Ridge Regression model on the training data and calculated our performance metric scores, along with other metrics of our estimator, let's see how well our model did!  
 
-```{python class.source="fold-show", time_it=TRUE, cache=TRUE}
+```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=FALSE}
 ridgecv_model_other_metrics()
 eval_performance_metrics(ridgecv_model)
+```
+```{python class.source="fold-show"}
+## R^2  Prediction Error Score:  0.6491233448758329 
+## MAE  Prediction Error Score:  1.198893973561779 
+## MSE  Prediction Error Score:  2.6320537070147103 
+## RMSE Prediction Error Score:  1.6223605354589683
 ```
 
 As we can see above we used the following process to evaluate our model:  
@@ -688,7 +694,7 @@ As we can see above we used the following process to evaluate our model:
   5. Next we begin the process of evaluating our model using `predict()` to use our test set of X to make predictions of Y,  
   6. Finally to make an evaluation of our final Ridge Regression model, we compare our predicted values of Y to the true values of Y in our `y_sdsurf_test` data set
 
-```{python time_it=TRUE}
+```{python time_it=TRUE, cache=TRUE}
 ridgecv_model_estimators = []
 ridgecv_model_estimators.append(('standardize', StandardScaler()))
 ridgecv_model_estimators.append(('RidgeCV', RidgeCV()))
@@ -698,74 +704,58 @@ ridge_model
 
 ## Support Vector Machines
 
-Within the class of supervised learning methods we call **Support Vector Machines** (SVMs), we will be Support Vector Regression to attempt and fit our model. A **Support Vector Regression** model is a method of SVM that only depends on the training set due to its inherent functionality that ignores samples who have predictions close to the target.  
+Before we begin building this model, we'll first give a brief introduction to **Support Vector Machines (SVMs)**. This particular type of supervised learning methods has the great functionality to thrive in high dimensional spaces (even when the number of dimensions > the number of samples) and to utilize memory efficiently by using a subset of the training data in the decision function (also known as **support vectors**).  However, SVMs have trouble with over-fitting (when the number of features (far greater) > the number of samples) and SVMs cannot output estimates of probability explicitly.
+
+Within this class of supervised learning methods we call Support Vector Machines (SVMs), we will be using a **Support Vector Regression** to attempt and fit our model for this project. A Support Vector Regression model is a method of SVM that only depends on the training set due to its inherent functionality that ignores samples who have predictions close to the target.  
 
 ### Nu SVR
 
-In the `sklearn` module, there are various estimator objects for Support Vector Regression. For this problem we will be using the ` `.  
+In the `sklearn.svm` class, there are various estimator model objects for Support Vector Regression: `SVR()`, `NuSVR()`, and `LinearSVR()`. For this problem we will be using the `NuSVR()` model, which uses a slightly different formula in comparison to the traditional SVR and Linear SVR models, where our parameter `nu=` replaces the parameter epsilon and indicates an upper bound ("on the fraction of training errors") and a lower bound ("of the fraction of support vectors"). With a default of `nu=0.5`, we are able to set `nu` to be any value in the interval $(0, 1]$.  
 
-```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=F}
+```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=FALSE}
+# Defining Cross-Validation Procedure
 rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
 
-# sc_X_train = StandardScaler()
-# sc_y_train = StandardScaler()
-# X_train_transformed = sc_X_train.fit_transform(X_sdsurf_train)
-# y_train_transformed = sc_y_train.fit_transform(y_sdsurf_train)
+# Defining our Nu-Support Vector Regressor Model
+NuSVR_model = NuSVR()
 
-nusvr_model = NuSVR()
-nusvr_model = nusvr_model.fit(X_sdsurf_train, y_sdsurf_train)
-nusvr_model_fitparams = nusvr_model.get_params
+# Training our Nu-Support Vector Regressor Model
+NuSVR_model = NuSVR_model.fit(X_sdsurf_train, y_sdsurf_train)
 
-nusvr_model_R2 = nusvr_model.score(X_sdsurf_test, y_sdsurf_test)
-
-y_prediction = nusvr_model.predict(X_sdsurf_test)
-
-nusvr_model_predR2 = r2_score(y_sdsurf_test, y_prediction) # same as ridgecv_model_score
-nusvr_model_predMSE = mean_squared_error(y_sdsurf_test, y_prediction)
-
-print("Estimated Parameters: ", nusvr_model_fitparams, "\nBest Estimated R^2 Score: ", nusvr_model_R2, "\n\nR^2 Prediction Error Score: ", nusvr_model_predR2, "\nMSE Prediction Error Score: ", nusvr_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(nusvr_model_predMSE))
+# Defining a Function to Output Attributes Specific to NuSVR()
+def NuSVR_model_other_metrics():
+  NuSVR_model_fitparams = NuSVR_model.get_params
+  print("Estimated Parameters:        ", NuSVR_model_fitparams)
 ```
 
-```{python time_it=TRUE}
-nusvr_model_estimators = []
-nusvr_model_estimators.append(('standardize', StandardScaler()))
-nusvr_model_estimators.append(('NuSVR', NuSVR()))
-nusvr_model = Pipeline(nusvr_model_estimators)
-nusvr_model
+Now that we've finished training our Nu-Support Vector Regression model on the training data and calculated our performance metric scores, along with other metrics of our estimator, let's see how well our model did!  
+
+```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=FALSE}
+NuSVR_model_other_metrics()
+eval_performance_metrics(NuSVR_model)
+```
+```{python class.source="fold-show"}
+## R^2  Prediction Error Score:  0.06445187172010536 
+## MAE  Prediction Error Score:  1.9674437575462775 
+## MSE  Prediction Error Score:  7.01788757721251 
+## RMSE Prediction Error Score:  2.649129588603115
 ```
 
-### Linear SVR
+As we can see above we used the following process to evaluate our model:  
+  
+  1. First we defined our cross validation process of a Repeated Stratified K-Fold with 5 folds and 5 repeats,  
+  2. We defined our base assumption model with `NuSVR()`,  
+  3. Using this `NuSVR()` object, we train the model on the training data using the `NuSVR.fit()` method,  
+  4. We then access the model's `NuSVR_model.get_params` attribute to see our model's chosen estimated parameter of epsilon,  
+  5. Next we begin the process of evaluating our model using our `eval_performance_metrics()` user-defined function to use our test set of X to make predictions of Y,  
+  6. Finally to make an evaluations of our final Nu-Support Vector Regression model, we compare our predicted values of Y to the true values of Y in our `y_sdsurf_test` data set
 
-```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=F}
-rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
-
-scaler_X = StandardScaler().fit(X_sdsurf_train)
-scaler_y = StandardScaler().fit(y_sdsurf_train.values)
-X_train_transformed = scaler_X.transform(X_sdsurf_train)
-y_train_transformed = scaler_y.transform(y_sdsurf_train)
-X_test_transformed = scaler_X.transform(X_sdsurf_test)
-y_test_transformed = scaler_y.transform(y_sdsurf_test)
-
-svr_model = LinearSVR(random_state=seed_val)
-svr_model = svr_model.fit(X_train_transformed, y_train_transformed)
-svr_model_fitparams = svr_model.get_params
-
-svr_model_R2 = svr_model.score(X_test_transformed, y_test_transformed)
-
-y_prediction = svr_model.predict(X_test_transformed)
-
-svr_model_predR2 = r2_score(y_test_transformed, y_prediction) # same as ridgecv_model_score
-svr_model_predMSE = mean_squared_error(y_test_transformed, y_prediction)
-
-print("Estimated Parameters: ", svr_model_fitparams, "\nBest Estimated R^2 Score: ", svr_model_R2, "\n\nR^2 Prediction Error Score: ", svr_model_predR2, "\nMSE Prediction Error Score: ", svr_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(svr_model_predMSE))
-```
-
-```{python time_it=TRUE}
-svr_model_estimators = []
-svr_model_estimators.append(('standardize', StandardScaler()))
-svr_model_estimators.append(('LinearSVR', LinearSVR()))
-svr_model = Pipeline(svr_model_estimators)
-svr_model
+```{python time_it=TRUE, cache=TRUE}
+NuSVR_model_estimators = []
+NuSVR_model_estimators.append(('standardize', StandardScaler()))
+NuSVR_model_estimators.append(('NuSVR', NuSVR()))
+NuSVR_model = Pipeline(NuSVR_model_estimators)
+NuSVR_model
 ```
 
 ## K-Nearest Neighbors Methods
@@ -784,7 +774,7 @@ As we can see, although we have a very accurate prediction when `weights = 'dist
 
 Another important parameter of our model we should discuss prior, is our choice of a nearest neighbor algorithm. The `KNeighborsRegressor()` model still depends on one of the chosen algorithms passed to the `algorithm=` parameter to compute the nearest neighbors: **Brute Force**, **K-D Tree**, or a **Ball Tree**. The optimal choice of an algorithm parameter depends on a multitude of factors that varies per data set: number of samples $N$ and dimensionality $D$, intrinsic dimensionality and/or sparsity of the data, the amount of `k` neighbors set for a query point, and number of requested query points. For this project, my choice of a K-D Tree algorithm was largely due to the size of my data set. A **K-D Tree** algorithm is a method that allows a user to decrease the `leaf_size=` parameter to improve model construction time. Although the Brute Force algorithm is generally considered more efficient than tree-based algorithms, in this project's case it would be much slower as its query time increases as the number of samples $N$ and dimensionality $D$ grows: $O(DN)$. However, rather than a usual **Linearithmic** run-time of $O(DlogN)$ with K-D Trees, with a large data set, K-D Trees improve run-time to roughly become closer to a **Quadratic** time of $O(DN)$.  
 
-```{python class.source="fold-show", time_it=TRUE, cache=TRUE}
+```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=FALSE}
 # Defining Cross-Validation Procedure
 rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
 
@@ -801,14 +791,29 @@ def KNN_model_other_metrics():
   print("Estimated Parameters:        ", KNN_model_fitparams)
 ```
 
-Now that we've trained our model on the training data and calculated our performance metric scores, along with other metrics of our estimator, let's see how well our model did!  
+Now that we've finished training our K-Nearest Neighbors Regression model on the training data and calculated our performance metric scores, along with other metrics of our estimator, let's see how well our model did!  
 
-```{python class.source="fold-show", time_it=TRUE, cache=TRUE}
+```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=FALSE}
 KNN_model_other_metrics()
 eval_performance_metrics(KNN_model)
 ```
+```{python class.source="fold-show"}
+## R^2  Prediction Error Score:  0.656779427108612 
+## MAE  Prediction Error Score:  1.1528233611966563 
+## MSE  Prediction Error Score:  2.5746226430561667 
+## RMSE Prediction Error Score:  1.6045630692048745
+```
 
-```{python time_it=TRUE}
+As we can see above we used the following process to evaluate our model:  
+  
+  1. First we defined our cross validation process of a Repeated Stratified K-Fold with 5 folds and 5 repeats,  
+  2. We defined our base assumption model with `KNeighborsRegressor(algorithm='kd_tree', leaf_size=55000)`,  
+  3. Using this `KNeighborsRegressor()` object, we train the model on the training data using the `KNeighborsRegressor.fit()` method,  
+  4. We then access the model's `NuSVR_model.get_params` attribute to return a dictionary object of the model's chosen estimated parameters,  
+  5. Next we begin the process of evaluating our model using our `eval_performance_metrics()` user-defined function to use our test set of X to make predictions of Y,  
+  6. Finally to make an evaluations of our final K-Nearest Neighbors Regression model, we compare our predicted values of Y to the true values of Y in our `y_sdsurf_test` data set
+  
+```{python time_it=TRUE, cache=TRUE}
 KNN_model_estimators = []
 KNN_model_estimators.append(('standardize', StandardScaler()))
 KNN_model_estimators.append(('KNN Regressor', KNeighborsRegressor()))
@@ -824,7 +829,7 @@ In the class of **Boosted Tree Models**, `sklearn` provides us with a plethora o
 
 According to the official documentation from `sklearn`'s website, the process of the `HistGradientBoostingRegressor()` method is as follows. As a sub-method of the `ensemble` class, it works similarly to a `GradientBoostingRegressor()` with a bottleneck procedure of building decision trees. However, as opposed to the tradition Gradient Boosting Regressor Tree procedure, the Histogram Based Gradient Boosting Tree Regressor does not require sorting the values of features but rather uses the histogram data-structure that "implicitly" orders the samples. Due to this, we have a much faster model building procedure with a O-notation run-time of $O(n_{\text{features}} \times n)$ as opposed to `GradientBoostingRegressor()`'s much more lengthy complex run-time of $O(n_{\text{features}} \times nlog(n))$.  
 
-```{python class.source="fold-show", time_it=TRUE, cache=TRUE}
+```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=FALSE}
 # Defining Cross-Validation Procedure
 rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
 
@@ -848,14 +853,29 @@ def HGBoost_model_other_metrics():
   print("Number of Iterations of the Boosting Process:    ", HGBoost_num_iter, "\nNumber of Trees Built at each Iteration:         ", HGBoost_tree_per_iter, "\nScores at each Iteration on the Training Data:   ", HGBoost_train_score, "\nScores at each Iteration on the Validation Data: ", HGBoost_val_score)
 ```
 
-Now that we've trained our model on the training data and calculated our performance metric scores, along with other metrics of our estimator, let's see how well our model did!  
+Now that we've finished training our Histogram-Based Gradient Boosting Tree Regression model on the training data and calculated our performance metric scores, along with other metrics of our estimator, let's see how well our model did!  
 
-```{python class.source="fold-show", time_it=TRUE, cache=TRUE}
+```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=FALSE}
 HGBoost_model_other_metrics()
 eval_performance_metrics(HGBoost_model)
 ```
+```{python class.source="fold-show"}
+## R^2  Prediction Error Score:  0.7927232133069582 
+## MAE  Prediction Error Score:  0.9096908421897236 
+## MSE  Prediction Error Score:  1.554858742598466 
+## RMSE Prediction Error Score:  1.2469397509897846
+```
 
-```{python time_it=TRUE}
+As we can see above we used the following process to evaluate our model:  
+  
+  1. First we defined our cross validation process of a Repeated Stratified K-Fold with 5 folds and 5 repeats,  
+  2. We defined our base assumption model with `HistGradientBoostingRegressor(loss='squared_error', random_state=seed_val)`,  
+  3. Using this `HistGradientBoostingRegressor()` object, we train the model on the training data using the `HistGradientBoostingRegressor.fit()` method,  
+  4. We then access the model's `HGBoost_model.n_iter_`, `HGBoost_model.n_trees_per_iteration_`, `HGBoost_model.train_score_`, and `HGBoost_model.validation_score_` attributes,  
+  5. Next we begin the process of evaluating our model using our `eval_performance_metrics()` user-defined function to use our test set of X to make predictions of Y,  
+  6. Finally to make an evaluations of our final Histogram-Based Gradient Boosting Tree Regression model, we compare our predicted values of Y to the true values of Y in our `y_sdsurf_test` data set
+
+```{python time_it=TRUE, cache=TRUE}
 HGBoost_model_estimators = []
 HGBoost_model_estimators.append(('standardize', StandardScaler()))
 HGBoost_model_estimators.append(('HG Boosted Tree', HistGradientBoostingRegressor()))
@@ -864,6 +884,8 @@ HGBoost_model
 ```
 
 ## Outcomes of All Our Fitted Models
+
+Sadly, it's a little difficult to make pretty looking tables when using `library(knitr)` with `python` in `rmarkdown`. So instead I'll present the results of our models with a printed code-chunk:  
 
 ```{python class.source="fold-show"}
 RidgeCV_list = [["MSE Estimate", 1.2065245693118951], ["RMSE Estimate", 1.0984191227905198], ["R^2 Prediction Error", 0.6491233448758329], ["MAE Prediction Error", 1.198893973561779], ["MSE Prediction Error", 2.6320537070147103], ["RMSE Prediction Error", 1.6223605354589683]]
@@ -888,24 +910,14 @@ NuSVR_list = [["Estimated Parameters", "<bound method BaseEstimator.get_params o
 ## Estimated Parameters:  <bound method BaseEstimator.get_params of NuSVR()> 
 ## Best Estimated R^2 Error Score:  0.06445187172010536 
 ## 
-## R^2 Prediction Error Score:  0.06445187172010536 
-## MSE Prediction Error Score:  7.01788757721251 
+## R^2  Prediction Error Score:  0.06445187172010536 
+## MAE  Prediction Error Score:  1.9674437575462775 
+## MSE  Prediction Error Score:  7.01788757721251 
 ## RMSE Prediction Error Score:  2.649129588603115
-
-LinearSVR_list = []
-# Linear Support Vector Regressor Model 
-## Run-Time: N/A MINUTES
-##
-## Estimated Parameters:  NA
-## Best Estimated R^2 Error Score:  NA 
-## 
-## R^2 Prediction Error Score:  NA 
-## MSE Prediction Error Score:  NA 
-## RMSE Prediction Error Score:  NA
 
 KNNRegression_list = [["Estimated Parameters", "<bound method BaseEstimator.get_params of KNeighborsRegressor(algorithm='kd_tree', leaf_size=55000)>"], ["R^2 Prediction Error", 0.656779427108612], ["MAE Prediction Error", 1.1528233611966563], ["MSE Prediction Error", 2.5746226430561667], ["RMSE Prediction Error", 1.6045630692048745]]
 # K-Nearest Neighbors Regressor Model
-## Run-Time: 6.12 MINUTES
+## Run-Time: 11.7 MINUTES
 ##
 ## Estimated Parameters:  <bound method BaseEstimator.get_params of KNeighborsRegressor(algorithm='kd_tree', leaf_size=55000)> 
 ## 
@@ -929,4 +941,19 @@ HGBoostingTree_list = [["R^2 Prediction Error", 0.7927232133069582], ["MAE Predi
 ## RMSE Prediction Error Score:  1.2469397509897846
 ```
 
+As we can see for each of our 4 models, we have our final prediction error scores using the metrics $MAE$, $MSE$, $RMSE$, and $R^2$ to evaluate the performance of most of our models. So let's see who our best-performing model is...  
+
 # Who's our Best-Fitting Model?
+
+With a speedy run-time of 11.7 minutes, an $MAE = 0.9097$, $MSE= 1.5549$, $RMSE= 1.2469$, and most importantly an $R^2 = 0.7927$ or a $79.27\%$ prediction accuracy. We can confidently say that when using $100$ iterations of each of the boosting processes with $1$ tree built at each iteration, we can conclude our Histogram-Based Gradient Boosting Tree Regression Model is our best performing model!!!  
+
+```{python class.source="fold-show"}
+##  _________________________________________________________________________________ 
+## | Regression Model    | Run-Time | R^2 Score | MAE Score | MSE Score | RMSE Score |
+## |_____________________|__________|___________|___________|___________|____________|
+## | Ridge Regression    | 2.30 MIN | 0.6491    | 1.1989    | 2.6321    | 1.6224     |
+## | NU Support Vector   | 42.0 MIN | 0.0645    | 1.9674    | 7.0179    | 2.6491     |
+## | K-Nearest Neighbors | 11.7 MIN | 0.6568    | 1.1528    | 2.5746    | 1.6046     |
+## | HB Gradient Boosted | 5.64 MIN | 0.7927    | 0.9097    | 1.5549    | 1.2469     |
+## |_____________________|__________|___________|___________|___________|____________|
+```

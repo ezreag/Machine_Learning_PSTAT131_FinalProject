@@ -3903,11 +3903,14 @@ predicted values</li>
 </ul></li>
 </ol>
 <p>For this project, since <code>WVHT</code> is a continuous variable,
-we will be using MAE, MSE, RMSE, and R^2 to evaluate the performance of
-most of our models. To easily output each of these outcomes for each
-model, we will define the general function below
-<code>def eval_performance_metrics(model_estimate)</code> to more easily
-call each of these values.</p>
+we will be using <span class="math inline">\(MAE\)</span>, <span class="math inline">\(MSE\)</span>, <span class="math inline">\(RMSE\)</span>, and <span class="math inline">\(R^2\)</span> to evaluate the performance of most
+of our models. To easily output each of these outcomes for each model,
+we will define the general function below
+<code>def eval_performance_metrics(model_estimate)</code>, where the
+object passed to the <code>model_estimate</code> argument is a trained
+model having an object type of the returned output for the
+<code>model.fit(X_sdsurf_train, y_sdsurf_train)</code> attribute, to
+more easily call the values for each of these performance metrics:</p>
 <pre class="python fold-show"><code>def eval_performance_metrics(model_estimate):
   y_pred = model_estimate.predict(X_sdsurf_test)
   print(&quot;R^2  Prediction Error Score: &quot;, r2_score(y_sdsurf_test, y_pred), &quot;\nMAE  Prediction Error Score: &quot;, mean_absolute_error(y_sdsurf_test, y_pred), &quot;\nMSE  Prediction Error Score: &quot;, mean_squared_error(y_sdsurf_test, y_pred), &quot;\nRMSE Prediction Error Score: &quot;, sqrt(mean_squared_error(y_sdsurf_test, y_pred)))</code></pre>
@@ -3951,6 +3954,8 @@ rely on the independence of the features. Ridge Regression however,
 addresses Linear Regression’s issue of using Ordinary Least Squares
 (OLS), by using a penalty parameter that works to minimize the size of
 coefficients (penalized residual sum of squares).</p>
+<div id="ridge-regression" class="section level3">
+<h3>Ridge Regression</h3>
 <p>In the <code>sklearn</code> module, there are various estimator
 objects for Ridge Regression. For this problem we will be using the
 <code>RidgeCV()</code> model, which conveniently builds a Ridge
@@ -3978,26 +3983,17 @@ def ridgecv_model_other_metrics():
   ridgecv_model_bestalpha = ridgecv_model.alpha_
   ridgecv_model_weights = ridgecv_model.coef_
   print(&quot;Best Estimated MSE Score:    &quot;, ridgecv_model_bestMSE, &quot;\nBest Estimated RMSE Score:   &quot;, sqrt(ridgecv_model_bestMSE), &quot;\nRegularization Parameter:    &quot;, ridgecv_model_bestalpha, &quot;\nEstimator&#39;s Num of Features: &quot;, ridgecv_model_weights, &quot;\nEstimated Weight Vectors:    &quot;, ridgecv_model_weights, end=&#39;&#39;)</code></pre>
-<p>Time for this code chunk to run: 1.75297338167826</p>
-<p>Now that we’ve trained our model on the training data and calculated
-our performance metric scores, along with other metrics of our
-estimator, let’s see how well our model did!</p>
-<pre class="python fold-show"><code>ridgecv_model_other_metrics()</code></pre>
-<pre><code>## Best Estimated MSE Score:     1.2065245693118951 
-## Best Estimated RMSE Score:    1.0984191227905198 
-## Regularization Parameter:     1.0 
-## Estimator&#39;s Num of Features:  [ 1.50720947e-02  4.45326729e-02  2.91260273e-03  1.99231367e-02
-##  -2.08471023e-03 -3.48544892e-04  7.25502860e-01  1.17954178e+00
-##  -6.31578249e-02 -1.77825914e-01 -7.03314115e-02] 
-## Estimated Weight Vectors:     [ 1.50720947e-02  4.45326729e-02  2.91260273e-03  1.99231367e-02
-##  -2.08471023e-03 -3.48544892e-04  7.25502860e-01  1.17954178e+00
-##  -6.31578249e-02 -1.77825914e-01 -7.03314115e-02]</code></pre>
-<pre class="python fold-show"><code>eval_performance_metrics(ridgecv_model)</code></pre>
-<pre><code>## R^2  Prediction Error Score:  0.6491233448758329 
+<p>Time for this code chunk to run: 0.0012359619140625</p>
+<p>Now that we’ve finished training our Ridge Regression model on the
+training data and calculated our performance metric scores, along with
+other metrics of our estimator, let’s see how well our model did!</p>
+<pre class="python fold-show"><code>ridgecv_model_other_metrics()
+eval_performance_metrics(ridgecv_model)</code></pre>
+<p>Time for this code chunk to run: 0.000676870346069336</p>
+<pre class="python fold-show"><code>## R^2  Prediction Error Score:  0.6491233448758329 
 ## MAE  Prediction Error Score:  1.198893973561779 
 ## MSE  Prediction Error Score:  2.6320537070147103 
 ## RMSE Prediction Error Score:  1.6223605354589683</code></pre>
-<p>Time for this code chunk to run: 2.57888603210449</p>
 <p>As we can see above we used the following process to evaluate our
 model:</p>
 <ol style="list-style-type: decimal">
@@ -4032,84 +4028,100 @@ ridgecv_model_estimators.append((&#39;RidgeCV&#39;, RidgeCV()))
 ridge_model = Pipeline(ridgecv_model_estimators)
 ridge_model</code></pre>
 <style>#sk-container-id-1 {color: black;background-color: white;}#sk-container-id-1 pre{padding: 0;}#sk-container-id-1 div.sk-toggleable {background-color: white;}#sk-container-id-1 label.sk-toggleable__label {cursor: pointer;display: block;width: 100%;margin-bottom: 0;padding: 0.3em;box-sizing: border-box;text-align: center;}#sk-container-id-1 label.sk-toggleable__label-arrow:before {content: "▸";float: left;margin-right: 0.25em;color: #696969;}#sk-container-id-1 label.sk-toggleable__label-arrow:hover:before {color: black;}#sk-container-id-1 div.sk-estimator:hover label.sk-toggleable__label-arrow:before {color: black;}#sk-container-id-1 div.sk-toggleable__content {max-height: 0;max-width: 0;overflow: hidden;text-align: left;background-color: #f0f8ff;}#sk-container-id-1 div.sk-toggleable__content pre {margin: 0.2em;color: black;border-radius: 0.25em;background-color: #f0f8ff;}#sk-container-id-1 input.sk-toggleable__control:checked~div.sk-toggleable__content {max-height: 200px;max-width: 100%;overflow: auto;}#sk-container-id-1 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {content: "▾";}#sk-container-id-1 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 input.sk-hidden--visually {border: 0;clip: rect(1px 1px 1px 1px);clip: rect(1px, 1px, 1px, 1px);height: 1px;margin: -1px;overflow: hidden;padding: 0;position: absolute;width: 1px;}#sk-container-id-1 div.sk-estimator {font-family: monospace;background-color: #f0f8ff;border: 1px dotted black;border-radius: 0.25em;box-sizing: border-box;margin-bottom: 0.5em;}#sk-container-id-1 div.sk-estimator:hover {background-color: #d4ebff;}#sk-container-id-1 div.sk-parallel-item::after {content: "";width: 100%;border-bottom: 1px solid gray;flex-grow: 1;}#sk-container-id-1 div.sk-label:hover label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-serial::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: 0;}#sk-container-id-1 div.sk-serial {display: flex;flex-direction: column;align-items: center;background-color: white;padding-right: 0.2em;padding-left: 0.2em;position: relative;}#sk-container-id-1 div.sk-item {position: relative;z-index: 1;}#sk-container-id-1 div.sk-parallel {display: flex;align-items: stretch;justify-content: center;background-color: white;position: relative;}#sk-container-id-1 div.sk-item::before, #sk-container-id-1 div.sk-parallel-item::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: -1;}#sk-container-id-1 div.sk-parallel-item {display: flex;flex-direction: column;z-index: 1;position: relative;background-color: white;}#sk-container-id-1 div.sk-parallel-item:first-child::after {align-self: flex-end;width: 50%;}#sk-container-id-1 div.sk-parallel-item:last-child::after {align-self: flex-start;width: 50%;}#sk-container-id-1 div.sk-parallel-item:only-child::after {width: 0;}#sk-container-id-1 div.sk-dashed-wrapped {border: 1px dashed gray;margin: 0 0.4em 0.5em 0.4em;box-sizing: border-box;padding-bottom: 0.4em;background-color: white;}#sk-container-id-1 div.sk-label label {font-family: monospace;font-weight: bold;display: inline-block;line-height: 1.2em;}#sk-container-id-1 div.sk-label-container {text-align: center;}#sk-container-id-1 div.sk-container {display: inline-block !important;position: relative;}#sk-container-id-1 div.sk-text-repr-fallback {display: none;}</style><div id="sk-container-id-1" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>Pipeline(steps=[(&#39;standardize&#39;, StandardScaler()), (&#39;RidgeCV&#39;, RidgeCV())])</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden><div class="sk-item sk-dashed-wrapped"><div class="sk-label-container"><div class="sk-label sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-1" type="checkbox"><label for="sk-estimator-id-1" class="sk-toggleable__label sk-toggleable__label-arrow">Pipeline</label><div class="sk-toggleable__content"><pre>Pipeline(steps=[(&#39;standardize&#39;, StandardScaler()), (&#39;RidgeCV&#39;, RidgeCV())])</pre></div></div></div><div class="sk-serial"><div class="sk-item"><div class="sk-estimator sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-2" type="checkbox"><label for="sk-estimator-id-2" class="sk-toggleable__label sk-toggleable__label-arrow">StandardScaler</label><div class="sk-toggleable__content"><pre>StandardScaler()</pre></div></div></div><div class="sk-item"><div class="sk-estimator sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-3" type="checkbox"><label for="sk-estimator-id-3" class="sk-toggleable__label sk-toggleable__label-arrow">RidgeCV</label><div class="sk-toggleable__content"><pre>RidgeCV()</pre></div></div></div></div></div></div></div>
-<p>Time for this code chunk to run: 2.43889498710632</p>
+<p>Time for this code chunk to run: 3.59451389312744</p>
+</div>
 </div>
 <div id="support-vector-machines" class="section level2">
 <h2>Support Vector Machines</h2>
-<p>Within the class of supervised learning methods we call
-<strong>Support Vector Machines</strong> (SVMs), we will be Support
-Vector Regression to attempt and fit our model. A <strong>Support Vector
-Regression</strong> model is a method of SVM that only depends on the
-training set due to its inherent functionality that ignores samples who
-have predictions close to the target.</p>
+<p>Before we begin building this model, we’ll first give a brief
+introduction to <strong>Support Vector Machines (SVMs)</strong>. This
+particular type of supervised learning methods has the great
+functionality to thrive in high dimensional spaces (even when the number
+of dimensions &gt; the number of samples) and to utilize memory
+efficiently by using a subset of the training data in the decision
+function (also known as <strong>support vectors</strong>). However, SVMs
+have trouble with over-fitting (when the number of features (far
+greater) &gt; the number of samples) and SVMs cannot output estimates of
+probability explicitly.</p>
+<p>Within this class of supervised learning methods we call Support
+Vector Machines (SVMs), we will be using a <strong>Support Vector
+Regression</strong> to attempt and fit our model for this project. A
+Support Vector Regression model is a method of SVM that only depends on
+the training set due to its inherent functionality that ignores samples
+who have predictions close to the target.</p>
 <div id="nu-svr" class="section level3">
 <h3>Nu SVR</h3>
-<p>In the <code>sklearn</code> module, there are various estimator
-objects for Support Vector Regression. For this problem we will be using
-the <code></code>.</p>
-<pre class="python fold-show"><code>rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
+<p>In the <code>sklearn.svm</code> class, there are various estimator
+model objects for Support Vector Regression: <code>SVR()</code>,
+<code>NuSVR()</code>, and <code>LinearSVR()</code>. For this problem we
+will be using the <code>NuSVR()</code> model, which uses a slightly
+different formula in comparison to the traditional SVR and Linear SVR
+models, where our parameter <code>nu=</code> replaces the parameter
+epsilon and indicates an upper bound (“on the fraction of training
+errors”) and a lower bound (“of the fraction of support vectors”). With
+a default of <code>nu=0.5</code>, we are able to set <code>nu</code> to
+be any value in the interval <span class="math inline">\((0,
+1]\)</span>.</p>
+<pre class="python fold-show"><code># Defining Cross-Validation Procedure
+rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
 
-# sc_X_train = StandardScaler()
-# sc_y_train = StandardScaler()
-# X_train_transformed = sc_X_train.fit_transform(X_sdsurf_train)
-# y_train_transformed = sc_y_train.fit_transform(y_sdsurf_train)
+# Defining our Nu-Support Vector Regressor Model
+NuSVR_model = NuSVR()
 
-nusvr_model = NuSVR()
-nusvr_model = nusvr_model.fit(X_sdsurf_train, y_sdsurf_train)
-nusvr_model_fitparams = nusvr_model.get_params
+# Training our Nu-Support Vector Regressor Model
+NuSVR_model = NuSVR_model.fit(X_sdsurf_train, y_sdsurf_train)
 
-nusvr_model_R2 = nusvr_model.score(X_sdsurf_test, y_sdsurf_test)
-
-y_prediction = nusvr_model.predict(X_sdsurf_test)
-
-nusvr_model_predR2 = r2_score(y_sdsurf_test, y_prediction) # same as ridgecv_model_score
-nusvr_model_predMSE = mean_squared_error(y_sdsurf_test, y_prediction)
-
-print(&quot;Estimated Parameters: &quot;, nusvr_model_fitparams, &quot;\nBest Estimated R^2 Score: &quot;, nusvr_model_R2, &quot;\n\nR^2 Prediction Error Score: &quot;, nusvr_model_predR2, &quot;\nMSE Prediction Error Score: &quot;, nusvr_model_predMSE, &quot;\nRMSE Prediction Error Score: &quot;, sqrt(nusvr_model_predMSE))</code></pre>
-<p>Time for this code chunk to run: 0.00294995307922363</p>
-<pre class="python"><code>nusvr_model_estimators = []
-nusvr_model_estimators.append((&#39;standardize&#39;, StandardScaler()))
-nusvr_model_estimators.append((&#39;NuSVR&#39;, NuSVR()))
-nusvr_model = Pipeline(nusvr_model_estimators)
-nusvr_model</code></pre>
+# Defining a Function to Output Attributes Specific to NuSVR()
+def NuSVR_model_other_metrics():
+  NuSVR_model_fitparams = NuSVR_model.get_params
+  print(&quot;Estimated Parameters:        &quot;, NuSVR_model_fitparams)</code></pre>
+<p>Time for this code chunk to run: 0.00106692314147949</p>
+<p>Now that we’ve finished training our Nu-Support Vector Regression
+model on the training data and calculated our performance metric scores,
+along with other metrics of our estimator, let’s see how well our model
+did!</p>
+<pre class="python fold-show"><code>NuSVR_model_other_metrics()
+eval_performance_metrics(NuSVR_model)</code></pre>
+<p>Time for this code chunk to run: 0.00206208229064941</p>
+<pre class="python fold-show"><code>## R^2  Prediction Error Score:  0.06445187172010536 
+## MAE  Prediction Error Score:  1.9674437575462775 
+## MSE  Prediction Error Score:  7.01788757721251 
+## RMSE Prediction Error Score:  2.649129588603115</code></pre>
+<p>As we can see above we used the following process to evaluate our
+model:</p>
+<ol style="list-style-type: decimal">
+<li>First we defined our cross validation process of a Repeated
+Stratified K-Fold with 5 folds and 5 repeats,<br />
+</li>
+<li>We defined our base assumption model with
+<code>NuSVR()</code>,<br />
+</li>
+<li>Using this <code>NuSVR()</code> object, we train the model on the
+training data using the <code>NuSVR.fit()</code> method,<br />
+</li>
+<li>We then access the model’s <code>NuSVR_model.get_params</code>
+attribute to see our model’s chosen estimated parameter of
+epsilon,<br />
+</li>
+<li>Next we begin the process of evaluating our model using our
+<code>eval_performance_metrics()</code> user-defined function to use our
+test set of X to make predictions of Y,<br />
+</li>
+<li>Finally to make an evaluations of our final Nu-Support Vector
+Regression model, we compare our predicted values of Y to the true
+values of Y in our <code>y_sdsurf_test</code> data set</li>
+</ol>
+<pre class="python"><code>NuSVR_model_estimators = []
+NuSVR_model_estimators.append((&#39;standardize&#39;, StandardScaler()))
+NuSVR_model_estimators.append((&#39;NuSVR&#39;, NuSVR()))
+NuSVR_model = Pipeline(NuSVR_model_estimators)
+NuSVR_model</code></pre>
 <style>#sk-container-id-2 {color: black;background-color: white;}#sk-container-id-2 pre{padding: 0;}#sk-container-id-2 div.sk-toggleable {background-color: white;}#sk-container-id-2 label.sk-toggleable__label {cursor: pointer;display: block;width: 100%;margin-bottom: 0;padding: 0.3em;box-sizing: border-box;text-align: center;}#sk-container-id-2 label.sk-toggleable__label-arrow:before {content: "▸";float: left;margin-right: 0.25em;color: #696969;}#sk-container-id-2 label.sk-toggleable__label-arrow:hover:before {color: black;}#sk-container-id-2 div.sk-estimator:hover label.sk-toggleable__label-arrow:before {color: black;}#sk-container-id-2 div.sk-toggleable__content {max-height: 0;max-width: 0;overflow: hidden;text-align: left;background-color: #f0f8ff;}#sk-container-id-2 div.sk-toggleable__content pre {margin: 0.2em;color: black;border-radius: 0.25em;background-color: #f0f8ff;}#sk-container-id-2 input.sk-toggleable__control:checked~div.sk-toggleable__content {max-height: 200px;max-width: 100%;overflow: auto;}#sk-container-id-2 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {content: "▾";}#sk-container-id-2 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-2 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-2 input.sk-hidden--visually {border: 0;clip: rect(1px 1px 1px 1px);clip: rect(1px, 1px, 1px, 1px);height: 1px;margin: -1px;overflow: hidden;padding: 0;position: absolute;width: 1px;}#sk-container-id-2 div.sk-estimator {font-family: monospace;background-color: #f0f8ff;border: 1px dotted black;border-radius: 0.25em;box-sizing: border-box;margin-bottom: 0.5em;}#sk-container-id-2 div.sk-estimator:hover {background-color: #d4ebff;}#sk-container-id-2 div.sk-parallel-item::after {content: "";width: 100%;border-bottom: 1px solid gray;flex-grow: 1;}#sk-container-id-2 div.sk-label:hover label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-2 div.sk-serial::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: 0;}#sk-container-id-2 div.sk-serial {display: flex;flex-direction: column;align-items: center;background-color: white;padding-right: 0.2em;padding-left: 0.2em;position: relative;}#sk-container-id-2 div.sk-item {position: relative;z-index: 1;}#sk-container-id-2 div.sk-parallel {display: flex;align-items: stretch;justify-content: center;background-color: white;position: relative;}#sk-container-id-2 div.sk-item::before, #sk-container-id-2 div.sk-parallel-item::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: -1;}#sk-container-id-2 div.sk-parallel-item {display: flex;flex-direction: column;z-index: 1;position: relative;background-color: white;}#sk-container-id-2 div.sk-parallel-item:first-child::after {align-self: flex-end;width: 50%;}#sk-container-id-2 div.sk-parallel-item:last-child::after {align-self: flex-start;width: 50%;}#sk-container-id-2 div.sk-parallel-item:only-child::after {width: 0;}#sk-container-id-2 div.sk-dashed-wrapped {border: 1px dashed gray;margin: 0 0.4em 0.5em 0.4em;box-sizing: border-box;padding-bottom: 0.4em;background-color: white;}#sk-container-id-2 div.sk-label label {font-family: monospace;font-weight: bold;display: inline-block;line-height: 1.2em;}#sk-container-id-2 div.sk-label-container {text-align: center;}#sk-container-id-2 div.sk-container {display: inline-block !important;position: relative;}#sk-container-id-2 div.sk-text-repr-fallback {display: none;}</style><div id="sk-container-id-2" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>Pipeline(steps=[(&#39;standardize&#39;, StandardScaler()), (&#39;NuSVR&#39;, NuSVR())])</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden><div class="sk-item sk-dashed-wrapped"><div class="sk-label-container"><div class="sk-label sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-4" type="checkbox"><label for="sk-estimator-id-4" class="sk-toggleable__label sk-toggleable__label-arrow">Pipeline</label><div class="sk-toggleable__content"><pre>Pipeline(steps=[(&#39;standardize&#39;, StandardScaler()), (&#39;NuSVR&#39;, NuSVR())])</pre></div></div></div><div class="sk-serial"><div class="sk-item"><div class="sk-estimator sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-5" type="checkbox"><label for="sk-estimator-id-5" class="sk-toggleable__label sk-toggleable__label-arrow">StandardScaler</label><div class="sk-toggleable__content"><pre>StandardScaler()</pre></div></div></div><div class="sk-item"><div class="sk-estimator sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-6" type="checkbox"><label for="sk-estimator-id-6" class="sk-toggleable__label sk-toggleable__label-arrow">NuSVR</label><div class="sk-toggleable__content"><pre>NuSVR()</pre></div></div></div></div></div></div></div>
-<p>Time for this code chunk to run: 2.70341801643372</p>
-</div>
-<div id="linear-svr" class="section level3">
-<h3>Linear SVR</h3>
-<pre class="python fold-show"><code>rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
-
-scaler_X = StandardScaler().fit(X_sdsurf_train)
-scaler_y = StandardScaler().fit(y_sdsurf_train.values)
-X_train_transformed = scaler_X.transform(X_sdsurf_train)
-y_train_transformed = scaler_y.transform(y_sdsurf_train)
-X_test_transformed = scaler_X.transform(X_sdsurf_test)
-y_test_transformed = scaler_y.transform(y_sdsurf_test)
-
-svr_model = LinearSVR(random_state=seed_val)
-svr_model = svr_model.fit(X_train_transformed, y_train_transformed)
-svr_model_fitparams = svr_model.get_params
-
-svr_model_R2 = svr_model.score(X_test_transformed, y_test_transformed)
-
-y_prediction = svr_model.predict(X_test_transformed)
-
-svr_model_predR2 = r2_score(y_test_transformed, y_prediction) # same as ridgecv_model_score
-svr_model_predMSE = mean_squared_error(y_test_transformed, y_prediction)
-
-print(&quot;Estimated Parameters: &quot;, svr_model_fitparams, &quot;\nBest Estimated R^2 Score: &quot;, svr_model_R2, &quot;\n\nR^2 Prediction Error Score: &quot;, svr_model_predR2, &quot;\nMSE Prediction Error Score: &quot;, svr_model_predMSE, &quot;\nRMSE Prediction Error Score: &quot;, sqrt(svr_model_predMSE))</code></pre>
-<p>Time for this code chunk to run: 0.00260591506958008</p>
-<pre class="python"><code>svr_model_estimators = []
-svr_model_estimators.append((&#39;standardize&#39;, StandardScaler()))
-svr_model_estimators.append((&#39;LinearSVR&#39;, LinearSVR()))
-svr_model = Pipeline(svr_model_estimators)
-svr_model</code></pre>
-<style>#sk-container-id-3 {color: black;background-color: white;}#sk-container-id-3 pre{padding: 0;}#sk-container-id-3 div.sk-toggleable {background-color: white;}#sk-container-id-3 label.sk-toggleable__label {cursor: pointer;display: block;width: 100%;margin-bottom: 0;padding: 0.3em;box-sizing: border-box;text-align: center;}#sk-container-id-3 label.sk-toggleable__label-arrow:before {content: "▸";float: left;margin-right: 0.25em;color: #696969;}#sk-container-id-3 label.sk-toggleable__label-arrow:hover:before {color: black;}#sk-container-id-3 div.sk-estimator:hover label.sk-toggleable__label-arrow:before {color: black;}#sk-container-id-3 div.sk-toggleable__content {max-height: 0;max-width: 0;overflow: hidden;text-align: left;background-color: #f0f8ff;}#sk-container-id-3 div.sk-toggleable__content pre {margin: 0.2em;color: black;border-radius: 0.25em;background-color: #f0f8ff;}#sk-container-id-3 input.sk-toggleable__control:checked~div.sk-toggleable__content {max-height: 200px;max-width: 100%;overflow: auto;}#sk-container-id-3 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {content: "▾";}#sk-container-id-3 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-3 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-3 input.sk-hidden--visually {border: 0;clip: rect(1px 1px 1px 1px);clip: rect(1px, 1px, 1px, 1px);height: 1px;margin: -1px;overflow: hidden;padding: 0;position: absolute;width: 1px;}#sk-container-id-3 div.sk-estimator {font-family: monospace;background-color: #f0f8ff;border: 1px dotted black;border-radius: 0.25em;box-sizing: border-box;margin-bottom: 0.5em;}#sk-container-id-3 div.sk-estimator:hover {background-color: #d4ebff;}#sk-container-id-3 div.sk-parallel-item::after {content: "";width: 100%;border-bottom: 1px solid gray;flex-grow: 1;}#sk-container-id-3 div.sk-label:hover label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-3 div.sk-serial::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: 0;}#sk-container-id-3 div.sk-serial {display: flex;flex-direction: column;align-items: center;background-color: white;padding-right: 0.2em;padding-left: 0.2em;position: relative;}#sk-container-id-3 div.sk-item {position: relative;z-index: 1;}#sk-container-id-3 div.sk-parallel {display: flex;align-items: stretch;justify-content: center;background-color: white;position: relative;}#sk-container-id-3 div.sk-item::before, #sk-container-id-3 div.sk-parallel-item::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: -1;}#sk-container-id-3 div.sk-parallel-item {display: flex;flex-direction: column;z-index: 1;position: relative;background-color: white;}#sk-container-id-3 div.sk-parallel-item:first-child::after {align-self: flex-end;width: 50%;}#sk-container-id-3 div.sk-parallel-item:last-child::after {align-self: flex-start;width: 50%;}#sk-container-id-3 div.sk-parallel-item:only-child::after {width: 0;}#sk-container-id-3 div.sk-dashed-wrapped {border: 1px dashed gray;margin: 0 0.4em 0.5em 0.4em;box-sizing: border-box;padding-bottom: 0.4em;background-color: white;}#sk-container-id-3 div.sk-label label {font-family: monospace;font-weight: bold;display: inline-block;line-height: 1.2em;}#sk-container-id-3 div.sk-label-container {text-align: center;}#sk-container-id-3 div.sk-container {display: inline-block !important;position: relative;}#sk-container-id-3 div.sk-text-repr-fallback {display: none;}</style><div id="sk-container-id-3" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>Pipeline(steps=[(&#39;standardize&#39;, StandardScaler()), (&#39;LinearSVR&#39;, LinearSVR())])</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden><div class="sk-item sk-dashed-wrapped"><div class="sk-label-container"><div class="sk-label sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-7" type="checkbox"><label for="sk-estimator-id-7" class="sk-toggleable__label sk-toggleable__label-arrow">Pipeline</label><div class="sk-toggleable__content"><pre>Pipeline(steps=[(&#39;standardize&#39;, StandardScaler()), (&#39;LinearSVR&#39;, LinearSVR())])</pre></div></div></div><div class="sk-serial"><div class="sk-item"><div class="sk-estimator sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-8" type="checkbox"><label for="sk-estimator-id-8" class="sk-toggleable__label sk-toggleable__label-arrow">StandardScaler</label><div class="sk-toggleable__content"><pre>StandardScaler()</pre></div></div></div><div class="sk-item"><div class="sk-estimator sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-9" type="checkbox"><label for="sk-estimator-id-9" class="sk-toggleable__label sk-toggleable__label-arrow">LinearSVR</label><div class="sk-toggleable__content"><pre>LinearSVR()</pre></div></div></div></div></div></div></div>
-<p>Time for this code chunk to run: 2.70512318611145</p>
+<p>Time for this code chunk to run: 3.10153794288635</p>
 </div>
 </div>
-<div id="k-nearest-neighbors-regression" class="section level2">
-<h2>K-Nearest Neighbors Regression</h2>
+<div id="k-nearest-neighbors-methods" class="section level2">
+<h2>K-Nearest Neighbors Methods</h2>
 <p>Before building our model, let’s talk about what <strong>K-Nearest
 Neighbors</strong> model entails. The idea is that with a user-defined
 number for <code>k</code>, our model uses the training data to find
@@ -4119,6 +4131,8 @@ According to the <code>sklearn</code> documentation, K-Nearest Neighbors
 Methods are considered <strong>non-generalizing machine learning
 methods</strong>, largely due to the concept that these methods
 “‘remember’ all of their training data”.</p>
+<div id="k-nearest-neighbors-regression-model" class="section level3">
+<h3>K-Nearest Neighbors Regression Model</h3>
 <p>In the <code>sklearn.neighbors</code> class, we are offered a variety
 of K-Nearest Neighbors Methods. For this particular data set, we will be
 using a <strong>K-Nearest Neighbors Regression</strong> with the
@@ -4179,7 +4193,7 @@ rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
 # Defining our K-Nearest Neighbors Regressor Model
 KNN_model = KNeighborsRegressor(algorithm=&#39;kd_tree&#39;, leaf_size=55000)
 
-# Defining our K-Nearest Neighbors Regressor Model
+# Training our K-Nearest Neighbors Regressor Model
 KNN_model = KNN_model.fit(X_sdsurf_train, y_sdsurf_train)
 
 # Defining a Function to Output Attributes Specific to KNeighborsRegressor()
@@ -4187,27 +4201,53 @@ def KNN_model_other_metrics():
   KNN_model_fitparams = KNN_model.get_params
   KNN_model_graph = KNN_model.kneighbors_graph(X_sdsurf_train)
   print(&quot;Estimated Parameters:        &quot;, KNN_model_fitparams)</code></pre>
-<p>Time for this code chunk to run: 3.09833598136902</p>
-<p>Now that we’ve trained our model on the training data and calculated
-our performance metric scores, along with other metrics of our
-estimator, let’s see how well our model did!</p>
-<pre class="python fold-show"><code>KNN_model_other_metrics()</code></pre>
-<pre><code>## Estimated Parameters:         &lt;bound method BaseEstimator.get_params of KNeighborsRegressor(algorithm=&#39;kd_tree&#39;, leaf_size=55000)&gt;</code></pre>
-<pre class="python fold-show"><code>eval_performance_metrics(KNN_model)</code></pre>
-<pre><code>## R^2  Prediction Error Score:  0.656779427108612 
+<p>Time for this code chunk to run: 0.00117897987365723</p>
+<p>Now that we’ve finished training our K-Nearest Neighbors Regression
+model on the training data and calculated our performance metric scores,
+along with other metrics of our estimator, let’s see how well our model
+did!</p>
+<pre class="python fold-show"><code>KNN_model_other_metrics()
+eval_performance_metrics(KNN_model)</code></pre>
+<p>Time for this code chunk to run: 0.00114297866821289</p>
+<pre class="python fold-show"><code>## R^2  Prediction Error Score:  0.656779427108612 
 ## MAE  Prediction Error Score:  1.1528233611966563 
 ## MSE  Prediction Error Score:  2.5746226430561667 
 ## RMSE Prediction Error Score:  1.6045630692048745</code></pre>
-<p>Time for this code chunk to run: 5.09122085173925</p>
+<p>As we can see above we used the following process to evaluate our
+model:</p>
+<ol style="list-style-type: decimal">
+<li>First we defined our cross validation process of a Repeated
+Stratified K-Fold with 5 folds and 5 repeats,<br />
+</li>
+<li>We defined our base assumption model with
+<code>KNeighborsRegressor(algorithm=&#39;kd_tree&#39;, leaf_size=55000)</code>,<br />
+</li>
+<li>Using this <code>KNeighborsRegressor()</code> object, we train the
+model on the training data using the
+<code>KNeighborsRegressor.fit()</code> method,<br />
+</li>
+<li>We then access the model’s <code>NuSVR_model.get_params</code>
+attribute to return a dictionary object of the model’s chosen estimated
+parameters,<br />
+</li>
+<li>Next we begin the process of evaluating our model using our
+<code>eval_performance_metrics()</code> user-defined function to use our
+test set of X to make predictions of Y,<br />
+</li>
+<li>Finally to make an evaluations of our final K-Nearest Neighbors
+Regression model, we compare our predicted values of Y to the true
+values of Y in our <code>y_sdsurf_test</code> data set</li>
+</ol>
 <pre class="python"><code>KNN_model_estimators = []
 KNN_model_estimators.append((&#39;standardize&#39;, StandardScaler()))
 KNN_model_estimators.append((&#39;KNN Regressor&#39;, KNeighborsRegressor()))
 KNN_model = Pipeline(KNN_model_estimators)
 KNN_model</code></pre>
-<style>#sk-container-id-4 {color: black;background-color: white;}#sk-container-id-4 pre{padding: 0;}#sk-container-id-4 div.sk-toggleable {background-color: white;}#sk-container-id-4 label.sk-toggleable__label {cursor: pointer;display: block;width: 100%;margin-bottom: 0;padding: 0.3em;box-sizing: border-box;text-align: center;}#sk-container-id-4 label.sk-toggleable__label-arrow:before {content: "▸";float: left;margin-right: 0.25em;color: #696969;}#sk-container-id-4 label.sk-toggleable__label-arrow:hover:before {color: black;}#sk-container-id-4 div.sk-estimator:hover label.sk-toggleable__label-arrow:before {color: black;}#sk-container-id-4 div.sk-toggleable__content {max-height: 0;max-width: 0;overflow: hidden;text-align: left;background-color: #f0f8ff;}#sk-container-id-4 div.sk-toggleable__content pre {margin: 0.2em;color: black;border-radius: 0.25em;background-color: #f0f8ff;}#sk-container-id-4 input.sk-toggleable__control:checked~div.sk-toggleable__content {max-height: 200px;max-width: 100%;overflow: auto;}#sk-container-id-4 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {content: "▾";}#sk-container-id-4 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-4 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-4 input.sk-hidden--visually {border: 0;clip: rect(1px 1px 1px 1px);clip: rect(1px, 1px, 1px, 1px);height: 1px;margin: -1px;overflow: hidden;padding: 0;position: absolute;width: 1px;}#sk-container-id-4 div.sk-estimator {font-family: monospace;background-color: #f0f8ff;border: 1px dotted black;border-radius: 0.25em;box-sizing: border-box;margin-bottom: 0.5em;}#sk-container-id-4 div.sk-estimator:hover {background-color: #d4ebff;}#sk-container-id-4 div.sk-parallel-item::after {content: "";width: 100%;border-bottom: 1px solid gray;flex-grow: 1;}#sk-container-id-4 div.sk-label:hover label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-4 div.sk-serial::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: 0;}#sk-container-id-4 div.sk-serial {display: flex;flex-direction: column;align-items: center;background-color: white;padding-right: 0.2em;padding-left: 0.2em;position: relative;}#sk-container-id-4 div.sk-item {position: relative;z-index: 1;}#sk-container-id-4 div.sk-parallel {display: flex;align-items: stretch;justify-content: center;background-color: white;position: relative;}#sk-container-id-4 div.sk-item::before, #sk-container-id-4 div.sk-parallel-item::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: -1;}#sk-container-id-4 div.sk-parallel-item {display: flex;flex-direction: column;z-index: 1;position: relative;background-color: white;}#sk-container-id-4 div.sk-parallel-item:first-child::after {align-self: flex-end;width: 50%;}#sk-container-id-4 div.sk-parallel-item:last-child::after {align-self: flex-start;width: 50%;}#sk-container-id-4 div.sk-parallel-item:only-child::after {width: 0;}#sk-container-id-4 div.sk-dashed-wrapped {border: 1px dashed gray;margin: 0 0.4em 0.5em 0.4em;box-sizing: border-box;padding-bottom: 0.4em;background-color: white;}#sk-container-id-4 div.sk-label label {font-family: monospace;font-weight: bold;display: inline-block;line-height: 1.2em;}#sk-container-id-4 div.sk-label-container {text-align: center;}#sk-container-id-4 div.sk-container {display: inline-block !important;position: relative;}#sk-container-id-4 div.sk-text-repr-fallback {display: none;}</style><div id="sk-container-id-4" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>Pipeline(steps=[(&#39;standardize&#39;, StandardScaler()),
-                (&#39;KNN Regressor&#39;, KNeighborsRegressor())])</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden><div class="sk-item sk-dashed-wrapped"><div class="sk-label-container"><div class="sk-label sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-10" type="checkbox"><label for="sk-estimator-id-10" class="sk-toggleable__label sk-toggleable__label-arrow">Pipeline</label><div class="sk-toggleable__content"><pre>Pipeline(steps=[(&#39;standardize&#39;, StandardScaler()),
-                (&#39;KNN Regressor&#39;, KNeighborsRegressor())])</pre></div></div></div><div class="sk-serial"><div class="sk-item"><div class="sk-estimator sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-11" type="checkbox"><label for="sk-estimator-id-11" class="sk-toggleable__label sk-toggleable__label-arrow">StandardScaler</label><div class="sk-toggleable__content"><pre>StandardScaler()</pre></div></div></div><div class="sk-item"><div class="sk-estimator sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-12" type="checkbox"><label for="sk-estimator-id-12" class="sk-toggleable__label sk-toggleable__label-arrow">KNeighborsRegressor</label><div class="sk-toggleable__content"><pre>KNeighborsRegressor()</pre></div></div></div></div></div></div></div>
-<p>Time for this code chunk to run: 2.12151002883911</p>
+<style>#sk-container-id-3 {color: black;background-color: white;}#sk-container-id-3 pre{padding: 0;}#sk-container-id-3 div.sk-toggleable {background-color: white;}#sk-container-id-3 label.sk-toggleable__label {cursor: pointer;display: block;width: 100%;margin-bottom: 0;padding: 0.3em;box-sizing: border-box;text-align: center;}#sk-container-id-3 label.sk-toggleable__label-arrow:before {content: "▸";float: left;margin-right: 0.25em;color: #696969;}#sk-container-id-3 label.sk-toggleable__label-arrow:hover:before {color: black;}#sk-container-id-3 div.sk-estimator:hover label.sk-toggleable__label-arrow:before {color: black;}#sk-container-id-3 div.sk-toggleable__content {max-height: 0;max-width: 0;overflow: hidden;text-align: left;background-color: #f0f8ff;}#sk-container-id-3 div.sk-toggleable__content pre {margin: 0.2em;color: black;border-radius: 0.25em;background-color: #f0f8ff;}#sk-container-id-3 input.sk-toggleable__control:checked~div.sk-toggleable__content {max-height: 200px;max-width: 100%;overflow: auto;}#sk-container-id-3 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {content: "▾";}#sk-container-id-3 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-3 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-3 input.sk-hidden--visually {border: 0;clip: rect(1px 1px 1px 1px);clip: rect(1px, 1px, 1px, 1px);height: 1px;margin: -1px;overflow: hidden;padding: 0;position: absolute;width: 1px;}#sk-container-id-3 div.sk-estimator {font-family: monospace;background-color: #f0f8ff;border: 1px dotted black;border-radius: 0.25em;box-sizing: border-box;margin-bottom: 0.5em;}#sk-container-id-3 div.sk-estimator:hover {background-color: #d4ebff;}#sk-container-id-3 div.sk-parallel-item::after {content: "";width: 100%;border-bottom: 1px solid gray;flex-grow: 1;}#sk-container-id-3 div.sk-label:hover label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-3 div.sk-serial::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: 0;}#sk-container-id-3 div.sk-serial {display: flex;flex-direction: column;align-items: center;background-color: white;padding-right: 0.2em;padding-left: 0.2em;position: relative;}#sk-container-id-3 div.sk-item {position: relative;z-index: 1;}#sk-container-id-3 div.sk-parallel {display: flex;align-items: stretch;justify-content: center;background-color: white;position: relative;}#sk-container-id-3 div.sk-item::before, #sk-container-id-3 div.sk-parallel-item::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: -1;}#sk-container-id-3 div.sk-parallel-item {display: flex;flex-direction: column;z-index: 1;position: relative;background-color: white;}#sk-container-id-3 div.sk-parallel-item:first-child::after {align-self: flex-end;width: 50%;}#sk-container-id-3 div.sk-parallel-item:last-child::after {align-self: flex-start;width: 50%;}#sk-container-id-3 div.sk-parallel-item:only-child::after {width: 0;}#sk-container-id-3 div.sk-dashed-wrapped {border: 1px dashed gray;margin: 0 0.4em 0.5em 0.4em;box-sizing: border-box;padding-bottom: 0.4em;background-color: white;}#sk-container-id-3 div.sk-label label {font-family: monospace;font-weight: bold;display: inline-block;line-height: 1.2em;}#sk-container-id-3 div.sk-label-container {text-align: center;}#sk-container-id-3 div.sk-container {display: inline-block !important;position: relative;}#sk-container-id-3 div.sk-text-repr-fallback {display: none;}</style><div id="sk-container-id-3" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>Pipeline(steps=[(&#39;standardize&#39;, StandardScaler()),
+                (&#39;KNN Regressor&#39;, KNeighborsRegressor())])</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden><div class="sk-item sk-dashed-wrapped"><div class="sk-label-container"><div class="sk-label sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-7" type="checkbox"><label for="sk-estimator-id-7" class="sk-toggleable__label sk-toggleable__label-arrow">Pipeline</label><div class="sk-toggleable__content"><pre>Pipeline(steps=[(&#39;standardize&#39;, StandardScaler()),
+                (&#39;KNN Regressor&#39;, KNeighborsRegressor())])</pre></div></div></div><div class="sk-serial"><div class="sk-item"><div class="sk-estimator sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-8" type="checkbox"><label for="sk-estimator-id-8" class="sk-toggleable__label sk-toggleable__label-arrow">StandardScaler</label><div class="sk-toggleable__content"><pre>StandardScaler()</pre></div></div></div><div class="sk-item"><div class="sk-estimator sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-9" type="checkbox"><label for="sk-estimator-id-9" class="sk-toggleable__label sk-toggleable__label-arrow">KNeighborsRegressor</label><div class="sk-toggleable__content"><pre>KNeighborsRegressor()</pre></div></div></div></div></div></div></div>
+<p>Time for this code chunk to run: 3.3362250328064</p>
+</div>
 </div>
 <div id="boosted-tree-models" class="section level2">
 <h2>Boosted Tree Models</h2>
@@ -4223,6 +4263,8 @@ larger than tens of thousands of samples” due to its functionality that
 is “<strong>orders of magnitude faster</strong>”. By using bin sizes to
 reduce the number of points to split on, we are able to train a model on
 our very large data set of continuous values.</p>
+<div id="histogram-based-gradient-boosting-tree-regression-model" class="section level3">
+<h3>Histogram-Based Gradient Boosting Tree Regression Model</h3>
 <p>According to the official documentation from <code>sklearn</code>’s
 website, the process of the <code>HistGradientBoostingRegressor()</code>
 method is as follows. As a sub-method of the <code>ensemble</code>
@@ -4258,66 +4300,62 @@ def HGBoost_model_other_metrics():
   HGBoost_val_score = HGBoost_model.validation_score_
   HGBoost_model_fitparams = HGBoost_model.get_params
   print(&quot;Number of Iterations of the Boosting Process:    &quot;, HGBoost_num_iter, &quot;\nNumber of Trees Built at each Iteration:         &quot;, HGBoost_tree_per_iter, &quot;\nScores at each Iteration on the Training Data:   &quot;, HGBoost_train_score, &quot;\nScores at each Iteration on the Validation Data: &quot;, HGBoost_val_score)</code></pre>
-<p>Time for this code chunk to run: 5.06479692459106</p>
-<p>Now that we’ve trained our model on the training data and calculated
-our performance metric scores, along with other metrics of our
-estimator, let’s see how well our model did!</p>
-<pre class="python fold-show"><code>HGBoost_model_other_metrics()</code></pre>
-<pre><code>## Number of Iterations of the Boosting Process:     100 
-## Number of Trees Built at each Iteration:          1 
-## Scores at each Iteration on the Training Data:    [-3.75021145 -3.28277944 -2.89955505 -2.58402141 -2.32314826 -2.10764126
-##  -1.9292971  -1.78060077 -1.6575275  -1.55523214 -1.4703614  -1.39811711
-##  -1.33642892 -1.28496098 -1.24134504 -1.20293853 -1.16920909 -1.13999025
-##  -1.1140026  -1.09093587 -1.07068296 -1.0532467  -1.03784021 -1.02254291
-##  -1.0099285  -0.99695129 -0.985819   -0.97486085 -0.96439656 -0.95535099
-##  -0.94636323 -0.93777208 -0.93010544 -0.92335734 -0.91699201 -0.9113778
-##  -0.90511156 -0.89993353 -0.89556786 -0.89073488 -0.88578256 -0.88042414
-##  -0.87659351 -0.87176424 -0.86751813 -0.86304791 -0.85894774 -0.85525728
-##  -0.85038543 -0.84640595 -0.8418726  -0.8378544  -0.83493557 -0.8318117
-##  -0.82907227 -0.82451846 -0.81935704 -0.81568832 -0.81188354 -0.80927026
-##  -0.80594829 -0.80245589 -0.80029438 -0.79754957 -0.79288478 -0.78960567
-##  -0.7876911  -0.78538664 -0.78325049 -0.78146614 -0.77857077 -0.77509238
-##  -0.77305504 -0.77050881 -0.7687818  -0.76697535 -0.76534875 -0.76378855
-##  -0.76248402 -0.7603682  -0.75765686 -0.75505326 -0.75339461 -0.75116306
-##  -0.74767242 -0.74654452 -0.74440524 -0.74271636 -0.74144227 -0.73970856
-##  -0.73771028 -0.73597812 -0.73455302 -0.73314028 -0.73152769 -0.7303079
-##  -0.72863856 -0.72521117 -0.72406323 -0.72260599 -0.72046553] 
-## Scores at each Iteration on the Validation Data:  [-3.8951256  -3.40740423 -3.00471518 -2.67424108 -2.39787818 -2.17034601
-##  -1.9811154  -1.82635875 -1.69716831 -1.5900641  -1.50332734 -1.42738968
-##  -1.36304692 -1.30871296 -1.26414092 -1.22460024 -1.19018197 -1.16047135
-##  -1.1337788  -1.10977959 -1.08968747 -1.07225621 -1.05667384 -1.04152844
-##  -1.02935247 -1.01663528 -1.00527375 -0.99504775 -0.98458514 -0.97573178
-##  -0.9676125  -0.95951315 -0.95247316 -0.94538026 -0.93861594 -0.93321987
-##  -0.92694518 -0.92213752 -0.91786171 -0.91350649 -0.90821865 -0.90361976
-##  -0.90009793 -0.89442805 -0.8908212  -0.8864947  -0.88254944 -0.87894295
-##  -0.87458778 -0.87050373 -0.86753138 -0.86402059 -0.86153502 -0.8588291
-##  -0.85628172 -0.8516012  -0.84696414 -0.84427563 -0.84043574 -0.83833873
-##  -0.83589592 -0.83293754 -0.83123918 -0.82894951 -0.82413826 -0.82076385
-##  -0.81934561 -0.81726783 -0.81542093 -0.81438989 -0.81177292 -0.80831806
-##  -0.8064438  -0.8042818  -0.80290851 -0.8005627  -0.79956915 -0.79804982
-##  -0.79716241 -0.7951368  -0.79317753 -0.790255   -0.78889544 -0.78683292
-##  -0.78317951 -0.78277919 -0.78058299 -0.77960802 -0.77850707 -0.7770815
-##  -0.77588508 -0.77431917 -0.77320405 -0.77211576 -0.77077699 -0.76995714
-##  -0.76832425 -0.76566851 -0.76505363 -0.76354498 -0.76173909]</code></pre>
-<pre class="python fold-show"><code>eval_performance_metrics(HGBoost_model)</code></pre>
-<pre><code>## R^2  Prediction Error Score:  0.7927232133069582 
+<p>Time for this code chunk to run: 0.00176715850830078</p>
+<p>Now that we’ve finished training our Histogram-Based Gradient
+Boosting Tree Regression model on the training data and calculated our
+performance metric scores, along with other metrics of our estimator,
+let’s see how well our model did!</p>
+<pre class="python fold-show"><code>HGBoost_model_other_metrics()
+eval_performance_metrics(HGBoost_model)</code></pre>
+<p>Time for this code chunk to run: 0.00111794471740723</p>
+<pre class="python fold-show"><code>## R^2  Prediction Error Score:  0.7927232133069582 
 ## MAE  Prediction Error Score:  0.9096908421897236 
 ## MSE  Prediction Error Score:  1.554858742598466 
 ## RMSE Prediction Error Score:  1.2469397509897846</code></pre>
-<p>Time for this code chunk to run: 2.45349097251892</p>
+<p>As we can see above we used the following process to evaluate our
+model:</p>
+<ol style="list-style-type: decimal">
+<li>First we defined our cross validation process of a Repeated
+Stratified K-Fold with 5 folds and 5 repeats,<br />
+</li>
+<li>We defined our base assumption model with
+<code>HistGradientBoostingRegressor(loss=&#39;squared_error&#39;, random_state=seed_val)</code>,<br />
+</li>
+<li>Using this <code>HistGradientBoostingRegressor()</code> object, we
+train the model on the training data using the
+<code>HistGradientBoostingRegressor.fit()</code> method,<br />
+</li>
+<li>We then access the model’s <code>HGBoost_model.n_iter_</code>,
+<code>HGBoost_model.n_trees_per_iteration_</code>,
+<code>HGBoost_model.train_score_</code>, and
+<code>HGBoost_model.validation_score_</code> attributes,<br />
+</li>
+<li>Next we begin the process of evaluating our model using our
+<code>eval_performance_metrics()</code> user-defined function to use our
+test set of X to make predictions of Y,<br />
+</li>
+<li>Finally to make an evaluations of our final Histogram-Based Gradient
+Boosting Tree Regression model, we compare our predicted values of Y to
+the true values of Y in our <code>y_sdsurf_test</code> data set</li>
+</ol>
 <pre class="python"><code>HGBoost_model_estimators = []
 HGBoost_model_estimators.append((&#39;standardize&#39;, StandardScaler()))
 HGBoost_model_estimators.append((&#39;HG Boosted Tree&#39;, HistGradientBoostingRegressor()))
 HGBoost_model = Pipeline(HGBoost_model_estimators)
 HGBoost_model</code></pre>
-<style>#sk-container-id-5 {color: black;background-color: white;}#sk-container-id-5 pre{padding: 0;}#sk-container-id-5 div.sk-toggleable {background-color: white;}#sk-container-id-5 label.sk-toggleable__label {cursor: pointer;display: block;width: 100%;margin-bottom: 0;padding: 0.3em;box-sizing: border-box;text-align: center;}#sk-container-id-5 label.sk-toggleable__label-arrow:before {content: "▸";float: left;margin-right: 0.25em;color: #696969;}#sk-container-id-5 label.sk-toggleable__label-arrow:hover:before {color: black;}#sk-container-id-5 div.sk-estimator:hover label.sk-toggleable__label-arrow:before {color: black;}#sk-container-id-5 div.sk-toggleable__content {max-height: 0;max-width: 0;overflow: hidden;text-align: left;background-color: #f0f8ff;}#sk-container-id-5 div.sk-toggleable__content pre {margin: 0.2em;color: black;border-radius: 0.25em;background-color: #f0f8ff;}#sk-container-id-5 input.sk-toggleable__control:checked~div.sk-toggleable__content {max-height: 200px;max-width: 100%;overflow: auto;}#sk-container-id-5 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {content: "▾";}#sk-container-id-5 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-5 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-5 input.sk-hidden--visually {border: 0;clip: rect(1px 1px 1px 1px);clip: rect(1px, 1px, 1px, 1px);height: 1px;margin: -1px;overflow: hidden;padding: 0;position: absolute;width: 1px;}#sk-container-id-5 div.sk-estimator {font-family: monospace;background-color: #f0f8ff;border: 1px dotted black;border-radius: 0.25em;box-sizing: border-box;margin-bottom: 0.5em;}#sk-container-id-5 div.sk-estimator:hover {background-color: #d4ebff;}#sk-container-id-5 div.sk-parallel-item::after {content: "";width: 100%;border-bottom: 1px solid gray;flex-grow: 1;}#sk-container-id-5 div.sk-label:hover label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-5 div.sk-serial::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: 0;}#sk-container-id-5 div.sk-serial {display: flex;flex-direction: column;align-items: center;background-color: white;padding-right: 0.2em;padding-left: 0.2em;position: relative;}#sk-container-id-5 div.sk-item {position: relative;z-index: 1;}#sk-container-id-5 div.sk-parallel {display: flex;align-items: stretch;justify-content: center;background-color: white;position: relative;}#sk-container-id-5 div.sk-item::before, #sk-container-id-5 div.sk-parallel-item::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: -1;}#sk-container-id-5 div.sk-parallel-item {display: flex;flex-direction: column;z-index: 1;position: relative;background-color: white;}#sk-container-id-5 div.sk-parallel-item:first-child::after {align-self: flex-end;width: 50%;}#sk-container-id-5 div.sk-parallel-item:last-child::after {align-self: flex-start;width: 50%;}#sk-container-id-5 div.sk-parallel-item:only-child::after {width: 0;}#sk-container-id-5 div.sk-dashed-wrapped {border: 1px dashed gray;margin: 0 0.4em 0.5em 0.4em;box-sizing: border-box;padding-bottom: 0.4em;background-color: white;}#sk-container-id-5 div.sk-label label {font-family: monospace;font-weight: bold;display: inline-block;line-height: 1.2em;}#sk-container-id-5 div.sk-label-container {text-align: center;}#sk-container-id-5 div.sk-container {display: inline-block !important;position: relative;}#sk-container-id-5 div.sk-text-repr-fallback {display: none;}</style><div id="sk-container-id-5" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>Pipeline(steps=[(&#39;standardize&#39;, StandardScaler()),
-                (&#39;HG Boosted Tree&#39;, HistGradientBoostingRegressor())])</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden><div class="sk-item sk-dashed-wrapped"><div class="sk-label-container"><div class="sk-label sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-13" type="checkbox"><label for="sk-estimator-id-13" class="sk-toggleable__label sk-toggleable__label-arrow">Pipeline</label><div class="sk-toggleable__content"><pre>Pipeline(steps=[(&#39;standardize&#39;, StandardScaler()),
-                (&#39;HG Boosted Tree&#39;, HistGradientBoostingRegressor())])</pre></div></div></div><div class="sk-serial"><div class="sk-item"><div class="sk-estimator sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-14" type="checkbox"><label for="sk-estimator-id-14" class="sk-toggleable__label sk-toggleable__label-arrow">StandardScaler</label><div class="sk-toggleable__content"><pre>StandardScaler()</pre></div></div></div><div class="sk-item"><div class="sk-estimator sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-15" type="checkbox"><label for="sk-estimator-id-15" class="sk-toggleable__label sk-toggleable__label-arrow">HistGradientBoostingRegressor</label><div class="sk-toggleable__content"><pre>HistGradientBoostingRegressor()</pre></div></div></div></div></div></div></div>
-<p>Time for this code chunk to run: 2.40773105621338</p>
+<style>#sk-container-id-4 {color: black;background-color: white;}#sk-container-id-4 pre{padding: 0;}#sk-container-id-4 div.sk-toggleable {background-color: white;}#sk-container-id-4 label.sk-toggleable__label {cursor: pointer;display: block;width: 100%;margin-bottom: 0;padding: 0.3em;box-sizing: border-box;text-align: center;}#sk-container-id-4 label.sk-toggleable__label-arrow:before {content: "▸";float: left;margin-right: 0.25em;color: #696969;}#sk-container-id-4 label.sk-toggleable__label-arrow:hover:before {color: black;}#sk-container-id-4 div.sk-estimator:hover label.sk-toggleable__label-arrow:before {color: black;}#sk-container-id-4 div.sk-toggleable__content {max-height: 0;max-width: 0;overflow: hidden;text-align: left;background-color: #f0f8ff;}#sk-container-id-4 div.sk-toggleable__content pre {margin: 0.2em;color: black;border-radius: 0.25em;background-color: #f0f8ff;}#sk-container-id-4 input.sk-toggleable__control:checked~div.sk-toggleable__content {max-height: 200px;max-width: 100%;overflow: auto;}#sk-container-id-4 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {content: "▾";}#sk-container-id-4 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-4 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-4 input.sk-hidden--visually {border: 0;clip: rect(1px 1px 1px 1px);clip: rect(1px, 1px, 1px, 1px);height: 1px;margin: -1px;overflow: hidden;padding: 0;position: absolute;width: 1px;}#sk-container-id-4 div.sk-estimator {font-family: monospace;background-color: #f0f8ff;border: 1px dotted black;border-radius: 0.25em;box-sizing: border-box;margin-bottom: 0.5em;}#sk-container-id-4 div.sk-estimator:hover {background-color: #d4ebff;}#sk-container-id-4 div.sk-parallel-item::after {content: "";width: 100%;border-bottom: 1px solid gray;flex-grow: 1;}#sk-container-id-4 div.sk-label:hover label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-4 div.sk-serial::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: 0;}#sk-container-id-4 div.sk-serial {display: flex;flex-direction: column;align-items: center;background-color: white;padding-right: 0.2em;padding-left: 0.2em;position: relative;}#sk-container-id-4 div.sk-item {position: relative;z-index: 1;}#sk-container-id-4 div.sk-parallel {display: flex;align-items: stretch;justify-content: center;background-color: white;position: relative;}#sk-container-id-4 div.sk-item::before, #sk-container-id-4 div.sk-parallel-item::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: -1;}#sk-container-id-4 div.sk-parallel-item {display: flex;flex-direction: column;z-index: 1;position: relative;background-color: white;}#sk-container-id-4 div.sk-parallel-item:first-child::after {align-self: flex-end;width: 50%;}#sk-container-id-4 div.sk-parallel-item:last-child::after {align-self: flex-start;width: 50%;}#sk-container-id-4 div.sk-parallel-item:only-child::after {width: 0;}#sk-container-id-4 div.sk-dashed-wrapped {border: 1px dashed gray;margin: 0 0.4em 0.5em 0.4em;box-sizing: border-box;padding-bottom: 0.4em;background-color: white;}#sk-container-id-4 div.sk-label label {font-family: monospace;font-weight: bold;display: inline-block;line-height: 1.2em;}#sk-container-id-4 div.sk-label-container {text-align: center;}#sk-container-id-4 div.sk-container {display: inline-block !important;position: relative;}#sk-container-id-4 div.sk-text-repr-fallback {display: none;}</style><div id="sk-container-id-4" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>Pipeline(steps=[(&#39;standardize&#39;, StandardScaler()),
+                (&#39;HG Boosted Tree&#39;, HistGradientBoostingRegressor())])</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden><div class="sk-item sk-dashed-wrapped"><div class="sk-label-container"><div class="sk-label sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-10" type="checkbox"><label for="sk-estimator-id-10" class="sk-toggleable__label sk-toggleable__label-arrow">Pipeline</label><div class="sk-toggleable__content"><pre>Pipeline(steps=[(&#39;standardize&#39;, StandardScaler()),
+                (&#39;HG Boosted Tree&#39;, HistGradientBoostingRegressor())])</pre></div></div></div><div class="sk-serial"><div class="sk-item"><div class="sk-estimator sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-11" type="checkbox"><label for="sk-estimator-id-11" class="sk-toggleable__label sk-toggleable__label-arrow">StandardScaler</label><div class="sk-toggleable__content"><pre>StandardScaler()</pre></div></div></div><div class="sk-item"><div class="sk-estimator sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-12" type="checkbox"><label for="sk-estimator-id-12" class="sk-toggleable__label sk-toggleable__label-arrow">HistGradientBoostingRegressor</label><div class="sk-toggleable__content"><pre>HistGradientBoostingRegressor()</pre></div></div></div></div></div></div></div>
+<p>Time for this code chunk to run: 2.61320519447327</p>
+</div>
 </div>
 <div id="outcomes-of-all-our-fitted-models" class="section level2">
 <h2>Outcomes of All Our Fitted Models</h2>
-<pre class="python fold-show"><code>RidgeCV_list = [[&quot;MSE Estimate&quot;, 1.2065245693118951], [&quot;RMSE Estimate&quot;, 1.0984191227905198], [&quot;R^2 Prediction Error&quot;, 0.6491233448758329], [&quot;MSE Prediction Error&quot;, 2.6320537070147103], [&quot;RMSE Prediction Error&quot;, 1.6223605354589683]]
+<p>Sadly, it’s a little difficult to make pretty looking tables when
+using <code>library(knitr)</code> with <code>python</code> in
+<code>rmarkdown</code>. So instead I’ll present the results of our
+models with a printed code-chunk:</p>
+<pre class="python fold-show"><code>RidgeCV_list = [[&quot;MSE Estimate&quot;, 1.2065245693118951], [&quot;RMSE Estimate&quot;, 1.0984191227905198], [&quot;R^2 Prediction Error&quot;, 0.6491233448758329], [&quot;MAE Prediction Error&quot;, 1.198893973561779], [&quot;MSE Prediction Error&quot;, 2.6320537070147103], [&quot;RMSE Prediction Error&quot;, 1.6223605354589683]]
 # Ridge Regression Model 
 ## Run-Time: 2.30 MINUTES
 ##
@@ -4339,24 +4377,14 @@ NuSVR_list = [[&quot;Estimated Parameters&quot;, &quot;&lt;bound method BaseEsti
 ## Estimated Parameters:  &lt;bound method BaseEstimator.get_params of NuSVR()&gt; 
 ## Best Estimated R^2 Error Score:  0.06445187172010536 
 ## 
-## R^2 Prediction Error Score:  0.06445187172010536 
-## MSE Prediction Error Score:  7.01788757721251 
+## R^2  Prediction Error Score:  0.06445187172010536 
+## MAE  Prediction Error Score:  1.9674437575462775 
+## MSE  Prediction Error Score:  7.01788757721251 
 ## RMSE Prediction Error Score:  2.649129588603115
 
-LinearSVR_list = []
-# Linear Support Vector Regressor Model 
-## Run-Time: N/A MINUTES
-##
-## Estimated Parameters:  NA
-## Best Estimated R^2 Error Score:  NA 
-## 
-## R^2 Prediction Error Score:  NA 
-## MSE Prediction Error Score:  NA 
-## RMSE Prediction Error Score:  NA
-
-KNNRegression_list = [[&quot;Estimated Parameters&quot;, &quot;&lt;bound method BaseEstimator.get_params of KNeighborsRegressor(algorithm=&#39;kd_tree&#39;, leaf_size=55000)&gt;&quot;], [&quot;R^2 Prediction Error&quot;, 0.656779427108612], [&quot;MSE Prediction Error&quot;, 2.5746226430561667], [&quot;RMSE Prediction Error&quot;, 1.6045630692048745]]
+KNNRegression_list = [[&quot;Estimated Parameters&quot;, &quot;&lt;bound method BaseEstimator.get_params of KNeighborsRegressor(algorithm=&#39;kd_tree&#39;, leaf_size=55000)&gt;&quot;], [&quot;R^2 Prediction Error&quot;, 0.656779427108612], [&quot;MAE Prediction Error&quot;, 1.1528233611966563], [&quot;MSE Prediction Error&quot;, 2.5746226430561667], [&quot;RMSE Prediction Error&quot;, 1.6045630692048745]]
 # K-Nearest Neighbors Regressor Model
-## Run-Time: 6.12 MINUTES
+## Run-Time: 11.7 MINUTES
 ##
 ## Estimated Parameters:  &lt;bound method BaseEstimator.get_params of KNeighborsRegressor(algorithm=&#39;kd_tree&#39;, leaf_size=55000)&gt; 
 ## 
@@ -4365,7 +4393,7 @@ KNNRegression_list = [[&quot;Estimated Parameters&quot;, &quot;&lt;bound method 
 ## MSE  Prediction Error Score:  2.5746226430561667 
 ## RMSE Prediction Error Score:  1.6045630692048745
 
-HGBoostingTree_list = []
+HGBoostingTree_list = [[&quot;R^2 Prediction Error&quot;, 0.7927232133069582], [&quot;MAE Prediction Error&quot;, 0.9096908421897236], [&quot;MSE Prediction Error&quot;, 1.554858742598466], [&quot;RMSE Prediction Error&quot;, 1.2469397509897846]]
 # Histogram Based Gradient Boosted Tree Regressor Model 
 ## Run-Time: 5.64 MINUTES
 ##
@@ -4378,10 +4406,28 @@ HGBoostingTree_list = []
 ## MAE  Prediction Error Score:  0.9096908421897236 
 ## MSE  Prediction Error Score:  1.554858742598466 
 ## RMSE Prediction Error Score:  1.2469397509897846</code></pre>
+<p>As we can see for each of our 4 models, we have our final prediction
+error scores using the metrics <span class="math inline">\(MAE\)</span>,
+<span class="math inline">\(MSE\)</span>, <span class="math inline">\(RMSE\)</span>, and <span class="math inline">\(R^2\)</span> to evaluate the performance of most
+of our models. So let’s see who our best-performing model is…</p>
 </div>
 </div>
 <div id="whos-our-best-fitting-model" class="section level1">
 <h1>Who’s our Best-Fitting Model?</h1>
+<p>With a speedy run-time of 11.7 minutes, an <span class="math inline">\(MAE = 0.9097\)</span>, <span class="math inline">\(MSE= 1.5549\)</span>, <span class="math inline">\(RMSE= 1.2469\)</span>, and most importantly an
+<span class="math inline">\(R^2 = 0.7927\)</span> or a <span class="math inline">\(79.27\%\)</span> prediction accuracy. We can
+confidently say that when using <span class="math inline">\(100\)</span>
+iterations of each of the boosting processes with <span class="math inline">\(1\)</span> tree built at each iteration, we can
+conclude our Histogram-Based Gradient Boosting Tree Regression Model is
+our best performing model!!!</p>
+<pre class="python fold-show"><code>##  _________________________________________________________________________________ 
+## | Regression Model    | Run-Time | R^2 Score | MAE Score | MSE Score | RMSE Score |
+## |_____________________|__________|___________|___________|___________|____________|
+## | Ridge Regression    | 2.30 MIN | 0.6491    | 1.1989    | 2.6321    | 1.6224     |
+## | NU Support Vector   | 42.0 MIN | 0.0645    | 1.9674    | 7.0179    | 2.6491     |
+## | K-Nearest Neighbors | 11.7 MIN | 0.6568    | 1.1528    | 2.5746    | 1.6046     |
+## | HB Gradient Boosted | 5.64 MIN | 0.7927    | 0.9097    | 1.5549    | 1.2469     |
+## |_____________________|__________|___________|___________|___________|____________|</code></pre>
 </div>
 
 
