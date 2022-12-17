@@ -579,6 +579,7 @@ from sklearn.ensemble import (
   )
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.metrics import (
+  mean_absolute_error, 
   r2_score, 
   mean_squared_error
 )
@@ -621,7 +622,13 @@ Between Classification problems and Regression problems, we use very different m
       - **R^2**  
           - known as the coefficient of determination, a metric value ranging from 0 to 1 that measures the goodness of fit between actual and predicted values  
 
-For this project, since `WVHT` is a continuous variable, we will be using MAE, MSE, RMSE, and R^2 to evaluate the performance of most of our models.  
+For this project, since `WVHT` is a continuous variable, we will be using $MAE$, $MSE$, $RMSE$, and $R^2$ to evaluate the performance of most of our models. To easily output each of these outcomes for each model, we will define the general function below `def eval_performance_metrics(model_estimate)`, where the object passed to the `model_estimate` argument is a trained model having an object type of the returned output for the `model.fit(X_sdsurf_train, y_sdsurf_train)` attribute, to more easily call the values for each of these performance metrics:  
+
+```{python class.source="fold-show"}
+def eval_performance_metrics(model_estimate):
+  y_pred = model_estimate.predict(X_sdsurf_test)
+  print("R^2  Prediction Error Score: ", r2_score(y_sdsurf_test, y_pred), "\nMAE  Prediction Error Score: ", mean_absolute_error(y_sdsurf_test, y_pred), "\nMSE  Prediction Error Score: ", mean_squared_error(y_sdsurf_test, y_pred), "\nRMSE Prediction Error Score: ", sqrt(mean_squared_error(y_sdsurf_test, y_pred)))
+```
 
 # Our Modeling Pipelines
 
@@ -640,24 +647,36 @@ For this project we will be fitting, tuning, and evaluating various types of **B
 
 Out of the many different variations of linear models, we will be using a Ridge Regression to attempt and fit our model. A **Ridge Regression Model** is a variation of the Linear Regression model which works to minimize the residual sum of squares, which can be a down fall in some problems due to its coefficient estimate parameters that rely on the independence of the features. Ridge Regression however, addresses Linear Regression's issue of using Ordinary Least Squares (OLS), by using a penalty parameter that works to minimize the size of coefficients (penalized residual sum of squares).
 
+### Ridge Regression
+
 In the `sklearn` module, there are various estimator objects for Ridge Regression. For this problem we will be using the `RidgeCV()` model, which conveniently builds a Ridge Regression with a built in cross-validation feature of the alpha parameter that works identically to a cross-validated grid search to tune the hyperparameters for our final model. Although this model in `sklearn` prefers Leave-One-Out Cross-Validation, I have overrode the CV process to be a Repeated Stratified K-Fold with 5 folds and 5 repeats.  
 
 ```{python class.source="fold-show", time_it=TRUE, cache=TRUE}
+# Defining Cross-Validation Procedure
 rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
-
+# Defining Alpha Values to Grid Search
 ridge_alphas = np.logspace(0, 5, 100)
+
+# Defining our Ridge Regression Model with Built-In CV
 ridgecv_model = RidgeCV(alphas=ridge_alphas, cv=rkf, scoring='neg_mean_absolute_error')
+
+# Training our Ridge Regression Model with Built-In CV
 ridgecv_model = ridgecv_model.fit(X_sdsurf_train, y_sdsurf_train)
 
-ridgecv_model_R2 = ridgecv_model.score(X_sdsurf_test, y_sdsurf_test)
-ridgecv_model_bestMSE = absolute(ridgecv_model.best_score_)
+# Defining a Function to Output Attributes Specific to RidgeCV()
+def ridgecv_model_other_metrics():
+  ridgecv_model_bestMSE = absolute(ridgecv_model.best_score_)
+  ridgecv_model_nfeatures = ridgecv_model.n_features_in_
+  ridgecv_model_bestalpha = ridgecv_model.alpha_
+  ridgecv_model_weights = ridgecv_model.coef_
+  print("Best Estimated MSE Score:    ", ridgecv_model_bestMSE, "\nBest Estimated RMSE Score:   ", sqrt(ridgecv_model_bestMSE), "\nRegularization Parameter:    ", ridgecv_model_bestalpha, "\nEstimator's Num of Features: ", ridgecv_model_weights, "\nEstimated Weight Vectors:    ", ridgecv_model_weights, end='')
+```
 
-y_prediction = ridgecv_model.predict(X_sdsurf_test)
+Now that we've trained our model on the training data and calculated our performance metric scores, along with other metrics of our estimator, let's see how well our model did!  
 
-ridgecv_model_predR2 = r2_score(y_sdsurf_test, y_prediction) # same as ridgecv_model_score
-ridgecv_model_predMSE = mean_squared_error(y_sdsurf_test, y_prediction)
-
-print("Best Estimated MSE Score: ", ridgecv_model_bestMSE, "\nBest Estimated RMSE Score: ", sqrt(ridgecv_model_bestMSE), "\n\nR^2 Prediction Error Score: ", ridgecv_model_predR2, "\nMSE Prediction Error Score: ", ridgecv_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(ridgecv_model_predMSE))
+```{python class.source="fold-show", time_it=TRUE, cache=TRUE}
+ridgecv_model_other_metrics()
+eval_performance_metrics(ridgecv_model)
 ```
 
 As we can see above we used the following process to evaluate our model:  
@@ -670,10 +689,10 @@ As we can see above we used the following process to evaluate our model:
   6. Finally to make an evaluation of our final Ridge Regression model, we compare our predicted values of Y to the true values of Y in our `y_sdsurf_test` data set
 
 ```{python time_it=TRUE}
-estimators = []
-estimators.append(('standardize', StandardScaler()))
-estimators.append(('ridge', RidgeCV()))
-ridge_model = Pipeline(estimators)
+ridgecv_model_estimators = []
+ridgecv_model_estimators.append(('standardize', StandardScaler()))
+ridgecv_model_estimators.append(('RidgeCV', RidgeCV()))
+ridge_model = Pipeline(ridgecv_model_estimators)
 ridge_model
 ```
 
@@ -685,7 +704,7 @@ Within the class of supervised learning methods we call **Support Vector Machine
 
 In the `sklearn` module, there are various estimator objects for Support Vector Regression. For this problem we will be using the ` `.  
 
-```{python class.source="fold-show", time_it=TRUE, cache=TRUE}
+```{python class.source="fold-show", time_it=TRUE, cache=TRUE, eval=F}
 rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
 
 # sc_X_train = StandardScaler()
@@ -708,11 +727,11 @@ print("Estimated Parameters: ", nusvr_model_fitparams, "\nBest Estimated R^2 Sco
 ```
 
 ```{python time_it=TRUE}
-estimators = []
-estimators.append(('standardize', StandardScaler()))
-estimators.append(('linear svr', LinearSVR()))
-svr_model = Pipeline(estimators)
-svr_model
+nusvr_model_estimators = []
+nusvr_model_estimators.append(('standardize', StandardScaler()))
+nusvr_model_estimators.append(('NuSVR', NuSVR()))
+nusvr_model = Pipeline(nusvr_model_estimators)
+nusvr_model
 ```
 
 ### Linear SVR
@@ -741,43 +760,59 @@ svr_model_predMSE = mean_squared_error(y_test_transformed, y_prediction)
 print("Estimated Parameters: ", svr_model_fitparams, "\nBest Estimated R^2 Score: ", svr_model_R2, "\n\nR^2 Prediction Error Score: ", svr_model_predR2, "\nMSE Prediction Error Score: ", svr_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(svr_model_predMSE))
 ```
 
-```{python eval=F}
-print(X_sdsurf_train)
-print(y_sdsurf_train.values.reshape())
-```
-
 ```{python time_it=TRUE}
-estimators = []
-estimators.append(('standardize', StandardScaler()))
-estimators.append(('linear svr', LinearSVR()))
-svr_model = Pipeline(estimators)
+svr_model_estimators = []
+svr_model_estimators.append(('standardize', StandardScaler()))
+svr_model_estimators.append(('LinearSVR', LinearSVR()))
+svr_model = Pipeline(svr_model_estimators)
 svr_model
 ```
 
-## K-Nearest Neighbors Regression
+## K-Nearest Neighbors Methods
+
+Before building our model, let's talk about what **K-Nearest Neighbors** model entails. The idea is that with a user-defined number for `k`, our model uses the training data to find `k` neighboring points that are closest to the "new" point it has assigned a label to, also known as a **query point**. According to the `sklearn` documentation, K-Nearest Neighbors Methods are considered **non-generalizing machine learning methods**, largely due to the concept that these methods "'remember' all of their training data".  
+
+### K-Nearest Neighbors Regression Model
+
+In the `sklearn.neighbors` class, we are offered a variety of K-Nearest Neighbors Methods. For this particular data set, we will be using a **K-Nearest Neighbors Regression** with the `KNeighborsRegressor()` model, which can be used for data that is comprised of continuous data labels as opposed to discrete variables. This method computes each label that is assigned to a query point by calculating the mean of the labels of the `k` amount of nearest neighboring points.  
+
+Besides defining the value of `k`, there are a couple other ways that the model "chooses" its next query point to create its regression estimate. Within the `sklearn.neighbors` class, there are two weighting parameter options offered for a KNN Regressor: `weights = 'uniform'` or `weights = 'distance'`. The default value for the `weights` parameter, `'uniform'`, assigns equal weight to all points, while `'distance'` considers proportional weights that are "inverse of the distance from the query point". Yes this concept can be a little abstract and difficult to picture, so I've included a figure below from `sklearn`'s official documentation to give a visual representation for further explanation:  
+
+![Fig. 3: K-Nearest Neighbors Regression Explanation](131_Project_Images/KNNRegressor_example.png){width=100%}
+
+As we can see, although we have a very accurate prediction when `weights = 'distance'`, we have a very clear case of over-fitting that would be extremely detrimental in our final evaluation of our model's performance. Therefore for this project, we will be using the default of the `KNeighborsRegressor()` model, and set `weights = 'uniform'` to build a more generalized regression estimate to make a prediction of "new/unknown" data that we can evaluate with our testing data set.  
+
+Another important parameter of our model we should discuss prior, is our choice of a nearest neighbor algorithm. The `KNeighborsRegressor()` model still depends on one of the chosen algorithms passed to the `algorithm=` parameter to compute the nearest neighbors: **Brute Force**, **K-D Tree**, or a **Ball Tree**. The optimal choice of an algorithm parameter depends on a multitude of factors that varies per data set: number of samples $N$ and dimensionality $D$, intrinsic dimensionality and/or sparsity of the data, the amount of `k` neighbors set for a query point, and number of requested query points. For this project, my choice of a K-D Tree algorithm was largely due to the size of my data set. A **K-D Tree** algorithm is a method that allows a user to decrease the `leaf_size=` parameter to improve model construction time. Although the Brute Force algorithm is generally considered more efficient than tree-based algorithms, in this project's case it would be much slower as its query time increases as the number of samples $N$ and dimensionality $D$ grows: $O(DN)$. However, rather than a usual **Linearithmic** run-time of $O(DlogN)$ with K-D Trees, with a large data set, K-D Trees improve run-time to roughly become closer to a **Quadratic** time of $O(DN)$.  
 
 ```{python class.source="fold-show", time_it=TRUE, cache=TRUE}
+# Defining Cross-Validation Procedure
 rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
 
+# Defining our K-Nearest Neighbors Regressor Model
 KNN_model = KNeighborsRegressor(algorithm='kd_tree', leaf_size=55000)
 
+# Training our K-Nearest Neighbors Regressor Model
 KNN_model = KNN_model.fit(X_sdsurf_train, y_sdsurf_train)
-KNN_model_fitparams = KNN_model.get_params
-KNN_model_graph = KNN_model.kneighbors_graph(X_sdsurf_train)
 
-KNN_y_prediction = KNN_model.predict(X_sdsurf_test)
+# Defining a Function to Output Attributes Specific to KNeighborsRegressor()
+def KNN_model_other_metrics():
+  KNN_model_fitparams = KNN_model.get_params
+  KNN_model_graph = KNN_model.kneighbors_graph(X_sdsurf_train)
+  print("Estimated Parameters:        ", KNN_model_fitparams)
+```
 
-KNN_model_predR2 = KNN_model.score(X_sdsurf_test, y_sdsurf_test)
-KNN_model_predMSE = mean_squared_error(y_sdsurf_test, KNN_y_prediction)
+Now that we've trained our model on the training data and calculated our performance metric scores, along with other metrics of our estimator, let's see how well our model did!  
 
-print("Estimated Parameters: ", KNN_model_fitparams, "\n\nR^2 Prediction Error Score: ", KNN_model_predR2, "\nMSE Prediction Error Score: ", KNN_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(KNN_model_predMSE))
+```{python class.source="fold-show", time_it=TRUE, cache=TRUE}
+KNN_model_other_metrics()
+eval_performance_metrics(KNN_model)
 ```
 
 ```{python time_it=TRUE}
-estimators = []
-estimators.append(('standardize', StandardScaler()))
-estimators.append(('KNN Regressor', KNeighborsRegressor()))
-KNN_model = Pipeline(estimators)
+KNN_model_estimators = []
+KNN_model_estimators.append(('standardize', StandardScaler()))
+KNN_model_estimators.append(('KNN Regressor', KNeighborsRegressor()))
+KNN_model = Pipeline(KNN_model_estimators)
 KNN_model
 ```
 
@@ -785,52 +820,65 @@ KNN_model
 
 In the class of **Boosted Tree Models**, `sklearn` provides us with a plethora of options to consider. For this project we will be using a **Histogram-Based Gradient Boosting Tree Regressor** to attempt and fit our model. Similar to the common **Gradient Boosting Tree Regressor**, which builds an additive model in a forward stage-wise fashion optimizing arbitrary differentiable loss functions, this model estimator we will use is encourages by `sklearn` "when the number of samples is larger than tens of thousands of samples" due to its functionality that is "**orders of magnitude faster**". By using bin sizes to reduce the number of points to split on, we are able to train a model on our very large data set of continuous values.   
 
-According to the official documentation from `sklearn`'s website, the process of the `HistGradientBoostingRegressor()` method is as follows. As a sub-method of the `ensemble` class, it works similarly to a `GradientBoostingRegressor()` with a bottleneck procedure of building decision trees. However, as opposed to the tradition Gradient Boosting Regressor Tree procedure, the Histogram Based Gradient Boosting Tree Regressor does not require sorting the values of features but rather uses the histogram data-structure that "implicitly" orders the samples. Due to this, we have a much faster model building procedure with a O-notation runtime of $O(n_{\text{features}} \times n)$ as opposed to `GradientBoostingRegressor()`'s much more lengthy complex runtime of $O(n_{\text{features}} \times nlog(n))$.  
+### Histogram-Based Gradient Boosting Tree Regression Model
+
+According to the official documentation from `sklearn`'s website, the process of the `HistGradientBoostingRegressor()` method is as follows. As a sub-method of the `ensemble` class, it works similarly to a `GradientBoostingRegressor()` with a bottleneck procedure of building decision trees. However, as opposed to the tradition Gradient Boosting Regressor Tree procedure, the Histogram Based Gradient Boosting Tree Regressor does not require sorting the values of features but rather uses the histogram data-structure that "implicitly" orders the samples. Due to this, we have a much faster model building procedure with a O-notation run-time of $O(n_{\text{features}} \times n)$ as opposed to `GradientBoostingRegressor()`'s much more lengthy complex run-time of $O(n_{\text{features}} \times nlog(n))$.  
 
 ```{python class.source="fold-show", time_it=TRUE, cache=TRUE}
+# Defining Cross-Validation Procedure
 rkf = RepeatedKFold(n_splits=5, n_repeats=5, random_state=seed_val)
 
+# Defining our Histogram-Based Gradient Boosting Tree Regressor Model
 HGBoost_model = HistGradientBoostingRegressor(loss='squared_error', random_state=seed_val)
 
+# Training our Histogram-Based Gradient Boosting Tree Regressor Model
 HGBoost_model = HGBoost_model.fit(X_sdsurf_train, y_sdsurf_train)
-# number of iterations of the boosting process
-HGBoost_num_iter = HGBoost_model.n_iter_
-# number of tree that are built at each iteration
-HGBoost_tree_per_iter = HGBoost_model.n_trees_per_iteration_
-# scores at each iteration on the training data
-HGBoost_train_score = HGBoost_model.train_score_
-# scores at each iteration on the held-out validation data
-HGBoost_val_score = HGBoost_model.validation_score_
-HGBoost_model_fitparams = HGBoost_model.get_params
 
-HGBoost_y_prediction = HGBoost_model.predict(X_sdsurf_test)
+# Defining a Function to Output Attributes Specific to HistGradientBoostingRegressor()
+def HGBoost_model_other_metrics():
+  # number of iterations of the boosting process
+  HGBoost_num_iter = HGBoost_model.n_iter_
+  # number of tree that are built at each iteration
+  HGBoost_tree_per_iter = HGBoost_model.n_trees_per_iteration_
+  # scores at each iteration on the training data
+  HGBoost_train_score = HGBoost_model.train_score_
+  # scores at each iteration on the held-out validation data
+  HGBoost_val_score = HGBoost_model.validation_score_
+  HGBoost_model_fitparams = HGBoost_model.get_params
+  print("Number of Iterations of the Boosting Process:    ", HGBoost_num_iter, "\nNumber of Trees Built at each Iteration:         ", HGBoost_tree_per_iter, "\nScores at each Iteration on the Training Data:   ", HGBoost_train_score, "\nScores at each Iteration on the Validation Data: ", HGBoost_val_score)
+```
 
-HGBoost_model_predR2 = HGBoost_model.score(X_sdsurf_test, y_sdsurf_test)
-HGBoost_model_predMSE = mean_squared_error(y_sdsurf_test, HGBoost_y_prediction)
+Now that we've trained our model on the training data and calculated our performance metric scores, along with other metrics of our estimator, let's see how well our model did!  
 
-print("Number of Iterations of the Boosting Process: ", HGBoost_num_iter, "\nNumber of Trees Built at each Iteration: ", HGBoost_tree_per_iter, "\nScores at each Iteration on the Training Data: ", HGBoost_train_score, "\nScores at each Iteration on the Validation Data: ", HGBoost_val_score, "\n\nR^2 Prediction Error Score: ", HGBoost_model_predR2, "\nMSE Prediction Error Score: ", HGBoost_model_predMSE, "\nRMSE Prediction Error Score: ", sqrt(HGBoost_model_predMSE))
+```{python class.source="fold-show", time_it=TRUE, cache=TRUE}
+HGBoost_model_other_metrics()
+eval_performance_metrics(HGBoost_model)
 ```
 
 ```{python time_it=TRUE}
-estimators = []
-estimators.append(('standardize', StandardScaler()))
-estimators.append(('HG Boosted Tree', HistGradientBoostingRegressor()))
-HGBoost_model = Pipeline(estimators)
+HGBoost_model_estimators = []
+HGBoost_model_estimators.append(('standardize', StandardScaler()))
+HGBoost_model_estimators.append(('HG Boosted Tree', HistGradientBoostingRegressor()))
+HGBoost_model = Pipeline(HGBoost_model_estimators)
 HGBoost_model
 ```
 
-# Who's our Best-Fitting Model?
+## Outcomes of All Our Fitted Models
 
 ```{python class.source="fold-show"}
-RidgeCV_list = [["MSE Estimate", 1.2065245693118951], ["RMSE Estimate", 1.0984191227905198], ["R^2 Prediction Error", 0.6491233448758329], ["MSE Prediction Error", 2.6320537070147103], ["RMSE Prediction Error", 1.6223605354589683]]
+RidgeCV_list = [["MSE Estimate", 1.2065245693118951], ["RMSE Estimate", 1.0984191227905198], ["R^2 Prediction Error", 0.6491233448758329], ["MAE Prediction Error", 1.198893973561779], ["MSE Prediction Error", 2.6320537070147103], ["RMSE Prediction Error", 1.6223605354589683]]
 # Ridge Regression Model 
-## Run-Time: 2 MINUTES
+## Run-Time: 2.30 MINUTES
 ##
-## Best Estimated MSE Score:  1.2065245693118951 
-## Best Estimated RMSE Score:  1.0984191227905198 
+## Best Estimated MSE Score:     1.2065245693118951 
+## Best Estimated RMSE Score:    1.0984191227905198 
+## Regularization Parameter:     1.0 
+## Estimator's Num of Features:  [ 1.50720947e-02  4.45326729e-02  2.91260273e-03  1.99231367e-02  -2.08471023e-03 -3.48544892e-04  7.25502860e-01  1.17954178e+00  -6.31578249e-02 -1.77825914e-01 -7.03314115e-02] 
+## Estimated Weight Vectors:     [ 1.50720947e-02  4.45326729e-02  2.91260273e-03  1.99231367e-02  -2.08471023e-03 -3.48544892e-04  7.25502860e-01  1.17954178e+00  -6.31578249e-02 -1.77825914e-01 -7.03314115e-02]
 ## 
-## R^2 Prediction Error Score:  0.6491233448758329 
-## MSE Prediction Error Score:  2.6320537070147103 
+## R^2  Prediction Error Score:  0.6491233448758329 
+## MAE  Prediction Error Score:  1.198893973561779 
+## MSE  Prediction Error Score:  2.6320537070147103 
 ## RMSE Prediction Error Score:  1.6223605354589683
 
 NuSVR_list = [["Estimated Parameters", "<bound method BaseEstimator.get_params of NuSVR()>"], ["R^2 Prediction Error", 0.06445187172010536], ["MSE Prediction Error", 7.01788757721251], ["RMSE Prediction Error", 2.649129588603115]]
@@ -855,28 +903,30 @@ LinearSVR_list = []
 ## MSE Prediction Error Score:  NA 
 ## RMSE Prediction Error Score:  NA
 
-KNNRegression_list = [["Estimated Parameters", "<bound method BaseEstimator.get_params of KNeighborsRegressor(algorithm='kd_tree', leaf_size=55000)>"], ["R^2 Prediction Error", 0.656779427108612], ["MSE Prediction Error", 2.5746226430561667], ["RMSE Prediction Error", 1.6045630692048745]]
+KNNRegression_list = [["Estimated Parameters", "<bound method BaseEstimator.get_params of KNeighborsRegressor(algorithm='kd_tree', leaf_size=55000)>"], ["R^2 Prediction Error", 0.656779427108612], ["MAE Prediction Error", 1.1528233611966563], ["MSE Prediction Error", 2.5746226430561667], ["RMSE Prediction Error", 1.6045630692048745]]
 # K-Nearest Neighbors Regressor Model
-## Run-Time: 6 MINUTES
+## Run-Time: 6.12 MINUTES
 ##
 ## Estimated Parameters:  <bound method BaseEstimator.get_params of KNeighborsRegressor(algorithm='kd_tree', leaf_size=55000)> 
 ## 
-## R^2 Prediction Error Score:  0.656779427108612 
-## MSE Prediction Error Score:  2.5746226430561667 
+## R^2  Prediction Error Score:  0.656779427108612 
+## MAE  Prediction Error Score:  1.1528233611966563 
+## MSE  Prediction Error Score:  2.5746226430561667 
 ## RMSE Prediction Error Score:  1.6045630692048745
 
-HGBoostingTree_list = []
+HGBoostingTree_list = [["R^2 Prediction Error", 0.7927232133069582], ["MAE Prediction Error", 0.9096908421897236], ["MSE Prediction Error", 1.554858742598466], ["RMSE Prediction Error", 1.2469397509897846]]
 # Histogram Based Gradient Boosted Tree Regressor Model 
-## Run-Time: 5 MINUTES
+## Run-Time: 5.64 MINUTES
 ##
-## Number of Iterations of the Boosting Process:  100
-## Number of Trees Build at each Iteration:  1 
-## Scores at each Iteration on the Training Data:  NA
-## Scores at each Iteration on the Validation Data: NA
+## Number of Iterations of the Boosting Process:     100 
+## Number of Trees Built at each Iteration:          1 
+## Scores at each Iteration on the Training Data:    [-3.75021145 -3.28277944 -2.89955505 -2.58402141 -2.32314826 -2.10764126 -1.9292971  -1.78060077 -1.6575275  -1.55523214 -1.4703614  -1.39811711 -1.33642892 -1.28496098 -1.24134504 -1.20293853 -1.16920909 -1.13999025 -1.1140026  -1.09093587 -1.07068296 -1.0532467  -1.03784021 -1.02254291 -1.0099285  -0.99695129 -0.985819   -0.97486085 -0.96439656 -0.95535099 -0.94636323 -0.93777208 -0.93010544 -0.92335734 -0.91699201 -0.9113778 -0.90511156 -0.89993353 -0.89556786 -0.89073488 -0.88578256 -0.88042414 -0.87659351 -0.87176424 -0.86751813 -0.86304791 -0.85894774 -0.85525728 -0.85038543 -0.84640595 -0.8418726  -0.8378544  -0.83493557 -0.8318117 -0.82907227 -0.82451846 -0.81935704 -0.81568832 -0.81188354 -0.80927026 -0.80594829 -0.80245589 -0.80029438 -0.79754957 -0.79288478 -0.78960567 -0.7876911  -0.78538664 -0.78325049 -0.78146614 -0.77857077 -0.77509238 -0.77305504 -0.77050881 -0.7687818  -0.76697535 -0.76534875 -0.76378855 -0.76248402 -0.7603682  -0.75765686 -0.75505326 -0.75339461 -0.75116306 -0.74767242 -0.74654452 -0.74440524 -0.74271636 -0.74144227 -0.73970856 -0.73771028 -0.73597812 -0.73455302 -0.73314028 -0.73152769 -0.7303079 -0.72863856 -0.72521117 -0.72406323 -0.72260599 -0.72046553] 
+## Scores at each Iteration on the Validation Data:  [-3.8951256  -3.40740423 -3.00471518 -2.67424108 -2.39787818 -2.17034601 -1.9811154  -1.82635875 -1.69716831 -1.5900641  -1.50332734 -1.42738968 -1.36304692 -1.30871296 -1.26414092 -1.22460024 -1.19018197 -1.16047135 -1.1337788  -1.10977959 -1.08968747 -1.07225621 -1.05667384 -1.04152844 -1.02935247 -1.01663528 -1.00527375 -0.99504775 -0.98458514 -0.97573178 -0.9676125  -0.95951315 -0.95247316 -0.94538026 -0.93861594 -0.93321987 -0.92694518 -0.92213752 -0.91786171 -0.91350649 -0.90821865 -0.90361976 -0.90009793 -0.89442805 -0.8908212  -0.8864947  -0.88254944 -0.87894295 -0.87458778 -0.87050373 -0.86753138 -0.86402059 -0.86153502 -0.8588291 -0.85628172 -0.8516012  -0.84696414 -0.84427563 -0.84043574 -0.83833873 -0.83589592 -0.83293754 -0.83123918 -0.82894951 -0.82413826 -0.82076385 -0.81934561 -0.81726783 -0.81542093 -0.81438989 -0.81177292 -0.80831806 -0.8064438  -0.8042818  -0.80290851 -0.8005627  -0.79956915 -0.79804982 -0.79716241 -0.7951368  -0.79317753 -0.790255   -0.78889544 -0.78683292 -0.78317951 -0.78277919 -0.78058299 -0.77960802 -0.77850707 -0.7770815 -0.77588508 -0.77431917 -0.77320405 -0.77211576 -0.77077699 -0.76995714 -0.76832425 -0.76566851 -0.76505363 -0.76354498 -0.76173909]
 ##
-## R^2 Prediction Error Score:  0.7927232133069582 
-## MSE Prediction Error Score:  1.554858742598466 
+## R^2  Prediction Error Score:  0.7927232133069582 
+## MAE  Prediction Error Score:  0.9096908421897236 
+## MSE  Prediction Error Score:  1.554858742598466 
 ## RMSE Prediction Error Score:  1.2469397509897846
 ```
 
-## Outcomes of Fitted Models
+# Who's our Best-Fitting Model?
